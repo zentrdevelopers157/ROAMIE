@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -17,6 +18,8 @@ import {
 import PolaroidCard from '../components/PolaroidCard'
 import StickyNote from '../components/StickyNote'
 import PushPin from '../components/PushPin'
+import TripMap from '../components/TripMap'
+import type { MapActivity } from '../components/TripMap'
 import { useRoamie } from '../store/RoamieContext'
 
 /* ===== SPRING ===== */
@@ -140,8 +143,38 @@ function TripCard({ trip, index, onDelete }: {
           </div>
         )}
 
-        {/* Itinerary preview */}
-        {trip.itinerary.length > 0 ? (
+        {/* View toggle: Timeline / Map */}
+        <div className="flex items-center gap-2 px-0.5 pb-2">
+          {(['timeline', 'map'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className="text-[9px] font-display font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full transition-all duration-200"
+              style={{
+                background: viewMode === mode
+                  ? 'linear-gradient(135deg, #00D4C4, #2A6BFF)'
+                  : 'transparent',
+                color: viewMode === mode ? '#0A0A12' : '#8888A0',
+                border: viewMode === mode
+                  ? '1px solid transparent'
+                  : '1px solid rgba(136, 136, 160, 0.2)',
+                boxShadow: viewMode === mode
+                  ? '0 0 12px rgba(0, 212, 196, 0.2)'
+                  : 'none',
+              }}
+            >
+              {mode === 'timeline' ? '📜 Timeline' : '🗺️ Map'}
+            </button>
+          ))}
+        </div>
+
+        {/* Map view */}
+        {viewMode === 'map' && (
+          <TripMap activities={demoMapActivities} />
+        )}
+
+        {/* Timeline / Itinerary preview */}
+        {viewMode === 'timeline' && trip.itinerary.length > 0 ? (
           <div className="bg-base-bg/50 rounded-sm px-2.5 py-2">
             <p className="text-[9px] font-display font-semibold text-brand-cyan/70 uppercase tracking-wider mb-1.5">
               Day 1
@@ -160,20 +193,29 @@ function TripCard({ trip, index, onDelete }: {
               </p>
             )}
           </div>
-        ) : (
+        ) : viewMode === 'timeline' ? (
           <p className="text-[10px] font-handwritten text-text-secondary/60 px-0.5 pb-1">
             Itinerary brewing... ☕
           </p>
-        )}
+        ) : null}
       </PolaroidCard>
     </motion.div>
   )
 }
 
 /* ===== MAIN TRIPS COMPONENT ===== */
+/* ===== HARDCODED MANALI COORDINATES ===== */
+const demoMapActivities: MapActivity[] = [
+  { name: 'Solang Valley', coordinates: [77.1891, 32.2430] },
+  { name: 'Old Manali', coordinates: [77.1789, 32.2410] },
+  { name: 'Hadimba Temple', coordinates: [77.1870, 32.2398] },
+]
+
+/* ===== MAIN TRIPS COMPONENT ===== */
 export default function Trips() {
   const navigate = useNavigate()
   const { state, dispatch } = useRoamie()
+  const [viewMode, setViewMode] = useState<'timeline' | 'map'>('timeline')
 
   const handleDeleteTrip = (id: string) => {
     dispatch({ type: 'REMOVE_TRIP', payload: id })

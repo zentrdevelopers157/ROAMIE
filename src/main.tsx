@@ -5,13 +5,16 @@ import './index.css'
 import App from './App.tsx'
 import { RoamieProvider } from './store/RoamieContext'
 import { AuthProvider } from './store/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <RoamieProvider>
-          <App />
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
         </RoamieProvider>
       </AuthProvider>
     </BrowserRouter>

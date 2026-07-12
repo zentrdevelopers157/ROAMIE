@@ -4,6 +4,10 @@ import { motion } from 'framer-motion'
 import { Heart, Mic, Send, MapPin } from 'lucide-react'
 import { useRoamie, generateId } from '../store/RoamieContext'
 import type { ItineraryItem } from '../store/RoamieContext'
+import { generateTrip, type AIActivity, type AITripResponse } from '../lib/ai'
+import { getAffiliateLinks } from '../lib/affiliates'
+import StickyNote from '../components/StickyNote'
+import WashiTape from '../components/WashiTape'
 
 /* ===== SPRINGS ===== */
 const springBubble = { type: 'spring' as const, stiffness: 280, damping: 18 }
@@ -504,12 +508,25 @@ function LoadingCompass() {
 function TripRevealCard({
   destKey,
   onViewPlan,
+  aiActivities,
+  aiDestination,
+  onComparePrices,
 }: {
   destKey: DestKey
   onViewPlan: () => void
+  aiActivities?: AIActivity[]
+  aiDestination?: string
+  onComparePrices?: (type: string) => void
 }) {
-  const data = destData[destKey]
-  const items = itineraries[destKey]
+  const data = aiDestination ? { name: aiDestination, month: '', emoji: '' } : destData[destKey]
+  const items = aiActivities
+    ? aiActivities.map((a) => ({
+        time: a.time,
+        title: a.name,
+        desc: a.type === 'stay' ? '🏨 Accommodation' : a.type === 'transport' ? '🚗 Transport' : a.type === 'food' ? '🍽️ Food & Drink' : '🎯 Activity',
+        type: a.type,
+      }))
+    : itineraries[destKey].map((i) => ({ time: i.time, title: i.title, desc: i.desc, type: null }))
 
   return (
     <motion.div
@@ -646,6 +663,21 @@ function TripRevealCard({
                 <p className="text-[11px] font-body leading-tight mt-0.5" style={{ color: '#8888A0' }}>
                   {item.desc}
                 </p>
+                {item.type && (item.type === 'stay' || item.type === 'transport') && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onComparePrices?.(item.type!)}
+                    className="mt-1 text-[9px] px-2 py-0.5 rounded-full font-display font-medium tracking-wide"
+                    style={{
+                      background: 'rgba(0, 212, 196, 0.08)',
+                      border: '1px solid rgba(0, 212, 196, 0.2)',
+                      color: '#00D4C4',
+                    }}
+                  >
+                    🧾 Compare Prices
+                  </motion.button>
+                )}
               </div>
             </div>
           ))}
@@ -683,7 +715,7 @@ function TripRevealCard({
 /* ===== MAIN PLAN COMPONENT ===== */
 export default function Plan() {
   const navigate = useNavigate()
-  const { dispatch } = useRoamie()
+  const { state, dispatch } = useRoamie()
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -702,6 +734,9 @@ export default function Plan() {
   const [showMoodImages, setShowMoodImages] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [aiError, setAiError] = useState(false)
+  const [aiResult, setAiResult] = useState<AITripResponse | null>(null)
+  const [bookingSheet, setBookingSheet] = useState<{ destination: string; type: string } | null>(null)
 
   /* ---- Effects ---- */
   const scrollToBottom = () => {
@@ -731,44 +766,65 @@ export default function Plan() {
     }, 1500)
   }
 
-  // Handle mood like
+  // Handle mood like → triggers AI generation
   const handleMoodToggle = (i: number) => {
     if (likedMoods.includes(i)) {
       setLikedMoods((prev) => prev.filter((m) => m !== i))
     } else {
       setLikedMoods([i]) // only one at a time for simplicity
+      setAiError(false)
+      setAiResult(null)
+
       // Transition to loading after a beat
       setTimeout(() => {
         setStep(3)
         scrollToBottom()
 
-        // After 3s loading → reveal
-        setTimeout(() => {
-          setStep(4)
-          setIsSaved(true)
+        // Call OpenAI for real trip generation
+        const destInfo = destData[selectedKey!]
+        const userInput = `I want to go to ${destInfo.name} in ${destInfo.month}. My vibe: ${destInfo.moodDesc}`
+        const travelDNA = {
+          name: state.name,
+          vibes: state.selectedVibes,
+          adventureLevel: state.adventureLevel,
+          socialLevel: state.socialLevel,
+        }
 
-          // Save trip to context
-          const itinerary: ItineraryItem[] = (itineraries[selectedKey ?? 'mountains']).map((item) => ({
-            time: item.time,
-            title: item.title,
-            description: item.desc,
-          }))
+        generateTrip(userInput, travelDNA)
+          .then((result) => {
+            setAiResult(result)
+            setStep(4)
+            setIsSaved(true)
 
-          dispatch({
-            type: 'ADD_TRIP',
-            payload: {
-              id: generateId(),
-              destination: destData[selectedKey ?? 'mountains'].name,
-              preferences: [selectedKey ?? 'mountains'],
-              likedMoods: [i],
-              itinerary,
-              createdAt: new Date().toISOString(),
-            },
+            // Save trip to context
+            const itinerary: ItineraryItem[] = result.itinerary.flatMap((day) =>
+              day.activities.map((a) => ({
+                time: a.time,
+                title: a.name,
+                description: '',
+              })),
+            )
+
+            dispatch({
+              type: 'ADD_TRIP',
+              payload: {
+                id: generateId(),
+                destination: result.destination,
+                preferences: [selectedKey!],
+                likedMoods: [i],
+                itinerary,
+                createdAt: new Date().toISOString(),
+              },
+            })
+
+            setTimeout(() => setShowReveal(true), 250)
+            scrollToBottom()
           })
-
-          setTimeout(() => setShowReveal(true), 250)
-          scrollToBottom()
-        }, 3000)
+          .catch((err) => {
+            console.error('AI generation failed:', err)
+            setAiError(true)
+            scrollToBottom()
+          })
       }, 400)
     }
   }
@@ -917,6 +973,15 @@ export default function Plan() {
 
             {/* Loading compass card */}
             <LoadingCompass />
+
+            {/* AI error fallback */}
+            {aiError && (
+              <StickyNote rotate={0.5} className="max-w-[250px] mx-auto" delay={0.3}>
+                <p className="font-handwritten text-sm gradient-text text-center">
+                  Oops, my brain fuzzed out. Try again?
+                </p>
+              </StickyNote>
+            )}
           </>
         )}
 
@@ -929,7 +994,18 @@ export default function Plan() {
               </span>
             </RoamieBubble>
 
-            <TripRevealCard destKey={selectedKey} onViewPlan={handleViewPlan} />
+            <TripRevealCard
+              destKey={selectedKey}
+              onViewPlan={handleViewPlan}
+              aiActivities={aiResult?.itinerary[0]?.activities}
+              aiDestination={aiResult?.destination}
+              onComparePrices={(type) =>
+                setBookingSheet({
+                  destination: aiResult?.destination ?? destData[selectedKey].name,
+                  type,
+                })
+              }
+            />
 
             {/* Saved confirmation */}
             {isSaved && (
@@ -1028,6 +1104,97 @@ export default function Plan() {
           </motion.button>
         </div>
       </div>
+
+      {/* ===== Booking Sheet Overlay ===== */}
+      {bookingSheet && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-40"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setBookingSheet(null)}
+          />
+          <BookingSheet
+            destination={bookingSheet.destination}
+            type={bookingSheet.type}
+            onClose={() => setBookingSheet(null)}
+          />
+        </>
+      )}
     </div>
+  )
+}
+
+/* ===== BOOKING SHEET (affiliate links bottom sheet) ===== */
+function BookingSheet({
+  destination,
+  type,
+  onClose,
+}: {
+  destination: string
+  type: string
+  onClose: () => void
+}) {
+  const links = getAffiliateLinks(destination, type)
+
+  return (
+    <motion.div
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+      className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl px-4 pt-5 pb-8"
+      style={{
+        background: '#14141F',
+        backdropFilter: 'blur(16px)',
+        boxShadow: '0 -4px 30px rgba(0,0,0,0.4)',
+      }}
+    >
+      <WashiTape color="purple" rotate={2} className="-top-3 left-1/2 -translate-x-1/2" />
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-handwritten text-base gradient-text font-medium">
+          {type === 'stay' ? '🏨 Places to Stay' : '🚗 Getting There'}
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-xs font-display font-medium uppercase tracking-wider"
+          style={{ color: '#8888A0' }}
+        >
+          Close ✕
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {links.map((link) => (
+          <a
+            key={link.name}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full text-left px-4 py-3 rounded-lg text-sm font-display font-medium transition-all duration-200"
+            style={{
+              background: 'rgba(0, 212, 196, 0.04)',
+              border: '1px solid rgba(0, 212, 196, 0.08)',
+              color: '#00D4C4',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 212, 196, 0.08)'
+              e.currentTarget.style.borderColor = 'rgba(0, 212, 196, 0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 212, 196, 0.04)'
+              e.currentTarget.style.borderColor = 'rgba(0, 212, 196, 0.08)'
+            }}
+          >
+            <span className="flex items-center justify-between">
+              {link.name}
+              <span className="text-[10px] opacity-60">↗</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </motion.div>
   )
 }
