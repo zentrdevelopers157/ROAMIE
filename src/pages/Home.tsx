@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   MapPin,
@@ -10,6 +11,7 @@ import {
 import StickyNote from '../components/StickyNote'
 import PolaroidCard from '../components/PolaroidCard'
 import PushPin from '../components/PushPin'
+import { useRoamie } from '../store/RoamieContext'
 
 /* ===== SPRING TRANSITIONS ===== */
 const springBounce = { type: 'spring' as const, stiffness: 300, damping: 18 }
@@ -21,11 +23,13 @@ function QuickActionBtn({
   label,
   className = '',
   delay = 0,
+  onClick,
 }: {
   icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
   label: string
   className?: string
   delay?: number
+  onClick?: () => void
 }) {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -36,6 +40,7 @@ function QuickActionBtn({
       transition={{ type: 'spring', stiffness: 200, damping: 20, delay }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
       className={`flex flex-col items-center gap-1.5 ${className}`}
       whileTap={{ scale: 0.9 }}
       aria-label={label}
@@ -102,26 +107,30 @@ function DestinationCard({
 
 /* ===== TRENDING DESTINATIONS DATA ===== */
 const trendingDestinations = [
-  { name: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=200&q=80' },
-  { name: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=200&q=80' },
-  { name: 'Kerala', image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=200&q=80' },
-  { name: 'Rishikesh', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=200&q=80' },
-  { name: 'Udaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=200&q=80' },
-  { name: 'Leh', image: 'https://images.unsplash.com/photo-1628157588550-b9e051c6af3e?w=200&q=80' },
+  { name: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=85&fm=webp' },
+  { name: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=85&fm=webp' },
+  { name: 'Kerala', image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800&q=85&fm=webp' },
+  { name: 'Rishikesh', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=800&q=85&fm=webp' },
+  { name: 'Udaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&q=85&fm=webp' },
+  { name: 'Leh', image: 'https://images.unsplash.com/photo-1628157588550-b9e051c6af3e?w=800&q=85&fm=webp' },
 ]
 
 /* ===== COMMUNITY SPOTLIGHT DATA ===== */
 const communityPosts = [
-  { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80', height: 200, rotate: -1 },
-  { image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=300&q=80', height: 140, rotate: 1 },
-  { image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=300&q=80', height: 180, rotate: -0.5 },
-  { image: 'https://images.unsplash.com/photo-1530789253388-582c4b48b1f0?w=300&q=80', height: 160, rotate: 0.8 },
+  { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp', height: 200, rotate: -1, caption: 'Island vibes in Thailand 🏝️', likes: 42 },
+  { image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=900&q=85&fm=webp', height: 140, rotate: 1, caption: 'Mountain sunrise 🌄', likes: 28 },
+  { image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=85&fm=webp', height: 180, rotate: -0.5, caption: 'Lost in Paris streets 🗼', likes: 35 },
+  { image: 'https://images.unsplash.com/photo-1530789253388-582c4b48b1f0?w=900&q=85&fm=webp', height: 160, rotate: 0.8, caption: 'Bali rice terraces 🌾', likes: 51 },
 ]
 
 /* ===== MAIN HOME COMPONENT ===== */
 export default function Home() {
+  const navigate = useNavigate()
+  const { state } = useRoamie()
   const [searchFocused, setSearchFocused] = useState(false)
-  const hasActiveTrip = false // Toggle this for active trip state
+  const hasActiveTrip = state.trips.length > 0 // Check if user has trips
+
+  const greetingName = state.name || 'Wanderer'
 
   return (
     <div className="px-4 pt-6 pb-6 space-y-6">
@@ -134,7 +143,7 @@ export default function Home() {
       >
         <div>
           <h1 className="text-xl font-display font-semibold text-text-primary">
-            Hey, Bro <span className="inline-block animate-float" aria-hidden="true">👋</span>
+            Hey, {greetingName} <span className="inline-block animate-float" aria-hidden="true">👋</span>
           </h1>
           <p className="text-xs text-text-secondary font-body -mt-0.5">Ready to roam?</p>
         </div>
@@ -144,7 +153,7 @@ export default function Home() {
             <div
               className="h-10 w-10 rounded-sm bg-cover bg-center"
               style={{
-                backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80)',
+                backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=85&fm=webp)',
               }}
               role="img"
               aria-label="Your profile photo"
@@ -165,7 +174,7 @@ export default function Home() {
             <div
               className="h-52 w-full bg-cover bg-center"
               style={{
-                backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80)',
+                backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=90&fm=webp)',
               }}
               role="img"
               aria-label="Beautiful travel destination"
@@ -268,10 +277,10 @@ export default function Home() {
           Quick Actions
         </h2>
         <div className="relative flex justify-between items-start px-2">
-          <QuickActionBtn icon={MapPin} label="Explore" delay={0.1} className="mt-0" />
-          <QuickActionBtn icon={Compass} label="Plan Trip" delay={0.15} className="mt-2" />
-          <QuickActionBtn icon={Camera} label="Memories" delay={0.2} className="mt-0" />
-          <QuickActionBtn icon={Users} label="Group" delay={0.25} className="mt-3" />
+          <QuickActionBtn icon={MapPin} label="Explore" delay={0.1} className="mt-0" onClick={() => navigate('/trips')} />
+          <QuickActionBtn icon={Compass} label="Plan Trip" delay={0.15} className="mt-2" onClick={() => navigate('/plan')} />
+          <QuickActionBtn icon={Camera} label="Memories" delay={0.2} className="mt-0" onClick={() => navigate('/feed')} />
+          <QuickActionBtn icon={Users} label="Profile" delay={0.25} className="mt-3" onClick={() => navigate('/profile')} />
         </div>
       </section>
 
@@ -302,17 +311,23 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...springGentle, delay: 0.1 + i * 0.08 }}
-              className="relative rounded-sm overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.4)] break-inside-avoid"
+              className="relative rounded-sm overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.4)] break-inside-avoid group cursor-pointer"
               style={{ transform: `rotate(${post.rotate}deg)` }}
               whileHover={{ scale: 1.02, rotate: post.rotate + 0.5 }}
             >
               <div
-                className="w-full bg-cover bg-center"
+                className="w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                 style={{ backgroundImage: `url(${post.image})`, height: `${post.height}px`, minHeight: '8rem' }}
                 role="img"
                 aria-label="Travel community photo"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-2 left-2 right-2">
+                <p className="text-[11px] font-display font-medium text-white/90 truncate drop-shadow-lg">
+                  {post.caption}
+                </p>
+                <p className="text-[9px] text-white/50 mt-0.5">❤️ {post.likes}</p>
+              </div>
             </motion.div>
           ))}
         </div>

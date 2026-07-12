@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import WashiTape from '../components/WashiTape'
 import StickyNote from '../components/StickyNote'
+import { useRoamie } from '../store/RoamieContext'
 
 /* ===== SPRING ===== */
 const springSnap = { type: 'spring' as const, stiffness: 300, damping: 20 }
@@ -41,12 +42,12 @@ function SketchedBackpack({ size = 60 }: { size?: number }) {
 
 /* ===== VIBE CARD (for Step 2) ===== */
 const vibeData = [
-  { label: 'Beach Bum', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=200&q=80', tape: 'cyan' as const },
-  { label: 'Mountain Soul', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=200&q=80', tape: 'purple' as const },
-  { label: 'City Explorer', image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=200&q=80', tape: 'cyan' as const },
-  { label: 'Road Tripper', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=200&q=80', tape: 'purple' as const },
-  { label: 'Foodie', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&q=80', tape: 'cyan' as const },
-  { label: 'Culture Seeker', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=200&q=80', tape: 'purple' as const },
+  { label: 'Beach Bum', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=85&fm=webp', tape: 'cyan' as const },
+  { label: 'Mountain Soul', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=85&fm=webp', tape: 'purple' as const },
+  { label: 'City Explorer', image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&q=85&fm=webp', tape: 'cyan' as const },
+  { label: 'Road Tripper', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=600&q=85&fm=webp', tape: 'purple' as const },
+  { label: 'Foodie', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=85&fm=webp', tape: 'cyan' as const },
+  { label: 'Culture Seeker', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&q=85&fm=webp', tape: 'purple' as const },
 ]
 
 function VibeCard({
@@ -261,6 +262,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 /* ===== ONBOARDING COMPONENT ===== */
 export default function Onboarding() {
   const navigate = useNavigate()
+  const { dispatch } = useRoamie()
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1) // 1 = forward, -1 = back
   const [selectedVibes, setSelectedVibes] = useState<number[]>([])
@@ -280,6 +282,12 @@ export default function Onboarding() {
       setDirection(1)
       setStep((s) => s + 1)
     } else {
+      // Save all onboarding data to context
+      dispatch({ type: 'SET_NAME', payload: name })
+      dispatch({ type: 'SET_VIBES', payload: selectedVibes })
+      dispatch({ type: 'SET_ADVENTURE_LEVEL', payload: adventureLevel })
+      dispatch({ type: 'SET_SOCIAL_LEVEL', payload: socialLevel })
+      dispatch({ type: 'COMPLETE_ONBOARDING' })
       navigate('/home')
     }
   }
