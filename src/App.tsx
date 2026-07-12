@@ -8,10 +8,11 @@ import Trips from './pages/Trips'
 import Plan from './pages/Plan'
 import Feed from './pages/Feed'
 import Profile from './pages/Profile'
+import Auth from './pages/Auth'
 
 export default function App() {
   const location = useLocation()
-  const hideNav = location.pathname === '/' || location.pathname === '/onboarding'
+  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth'
 
   return (
     <div className="relative min-h-screen bg-base-bg">
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/plan" element={<Plan />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/auth" element={<Auth />} />
         </Routes>
       </main>
 

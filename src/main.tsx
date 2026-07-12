@@ -4,13 +4,16 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { RoamieProvider } from './store/RoamieContext'
+import { AuthProvider } from './store/AuthContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <RoamieProvider>
-        <App />
-      </RoamieProvider>
+      <AuthProvider>
+        <RoamieProvider>
+          <App />
+        </RoamieProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )
