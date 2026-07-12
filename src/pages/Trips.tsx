@@ -6,18 +6,11 @@ import {
   Plus,
   MapPin,
   Calendar,
-  Clock,
   Trash2,
   Compass,
-  Sun,
-  Moon,
-  Mountain,
-  Umbrella,
-  Utensils,
 } from 'lucide-react'
 import PolaroidCard from '../components/PolaroidCard'
 import StickyNote from '../components/StickyNote'
-import PushPin from '../components/PushPin'
 import TripMap from '../components/TripMap'
 import type { MapActivity } from '../components/TripMap'
 import { useRoamie } from '../store/RoamieContext'
@@ -26,19 +19,11 @@ import { useRoamie } from '../store/RoamieContext'
 const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
 
 /* ===== ITINERARY ITEM (compact) ===== */
-const iconMap = {
-  Utensils, MapPin, Sun, Umbrella, Clock: Clock as React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>,
-}
-
-function ItineraryPreview({ time, title, icon: Icon, isLast = false }: {
+function ItineraryPreview({ time, title, isLast = false }: {
   time: string
   title: string
-  icon?: string
   isLast?: boolean
 }) {
-  const IconComponent = icon && icon in iconMap
-    ? iconMap[icon as keyof typeof iconMap]
-    : MapPin
 
   return (
     <div className="relative flex gap-2 pb-2.5">
@@ -57,10 +42,12 @@ function ItineraryPreview({ time, title, icon: Icon, isLast = false }: {
 }
 
 /* ===== TRIP CARD ===== */
-function TripCard({ trip, index, onDelete }: {
+function TripCard({ trip, index, onDelete, viewMode, setViewMode }: {
   trip: import('../store/RoamieContext').SavedTrip
   index: number
   onDelete: (id: string) => void
+  viewMode: 'timeline' | 'map'
+  setViewMode: (mode: 'timeline' | 'map') => void
 }) {
   const rotates = [-1, 0.8, -0.5, 1.2, -0.3, 0.5]
 
@@ -255,7 +242,7 @@ export default function Trips() {
       {state.trips.length > 0 ? (
         <div>
           {state.trips.map((trip, i) => (
-            <TripCard key={trip.id} trip={trip} index={i} onDelete={handleDeleteTrip} />
+            <TripCard key={trip.id} trip={trip} index={i} onDelete={handleDeleteTrip} viewMode={viewMode} setViewMode={setViewMode} />
           ))}
         </div>
       ) : (

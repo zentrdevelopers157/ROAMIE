@@ -6,7 +6,7 @@ import {
   MapPin,
   Compass,
   Camera,
-  Award,
+
   Settings,
   LogOut,
   ChevronRight,

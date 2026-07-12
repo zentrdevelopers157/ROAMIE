@@ -12,7 +12,6 @@ import WashiTape from '../components/WashiTape'
 /* ===== SPRINGS ===== */
 const springBubble = { type: 'spring' as const, stiffness: 280, damping: 18 }
 const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
-const springStiff = { type: 'spring' as const, stiffness: 400, damping: 25 }
 
 /* ===== TOPOGRAPHIC BG ===== */
 const topoBg: React.CSSProperties = {
