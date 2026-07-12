@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4C4"/>
+      <stop offset="50%" stop-color="#2A6BFF"/>
+      <stop offset="100%" stop-color="#8A2BE2"/>
+    </linearGradient>
+  </defs>
+  <!-- Backpack body -->
+  <rect x="22" y="32" width="56" height="50" rx="10" fill="url(#brandGrad)" opacity="0.9"/>
+  <!-- Backpack flap -->
+  <path d="M22 48h56v4H22z" fill="#0A0A12" opacity="0.3"/>
+  <!-- Backpack top handle -->
+  <rect x="40" y="24" width="20" height="10" rx="5" fill="url(#brandGrad)" opacity="0.8"/>
+  <!-- Backpack straps -->
+  <rect x="22" y="35" width="6" height="35" rx="3" fill="url(#brandGrad)" opacity="0.6"/>
+  <rect x="72" y="35" width="6" height="35" rx="3" fill="url(#brandGrad)" opacity="0.6"/>
+  <!-- Front pocket -->
+  <rect x="32" y="42" width="36" height="30" rx="6" fill="#0A0A12" opacity="0.25"/>
+  <!-- Buckle -->
+  <circle cx="38" cy="52" r="3" fill="#00D4C4" opacity="0.8"/>
+  <circle cx="62" cy="52" r="3" fill="#00D4C4" opacity="0.8"/>
+  <!-- Compass circle on top right -->
+  <circle cx="68" cy="38" r="5" fill="none" stroke="#00D4C4" stroke-width="1.5" opacity="0.7"/>
+  <line x1="68" y1="34" x2="68" y2="42" stroke="#00D4C4" stroke-width="0.8" opacity="0.7"/>
+  <line x1="64" y1="38" x2="72" y2="38" stroke="#00D4C4" stroke-width="0.8" opacity="0.7"/>
+</svg>
