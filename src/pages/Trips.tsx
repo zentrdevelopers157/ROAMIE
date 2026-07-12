@@ -49,13 +49,17 @@ function TripCard({ trip, index, onDelete, viewMode, setViewMode }: {
   viewMode: 'timeline' | 'map'
   setViewMode: (mode: 'timeline' | 'map') => void
 }) {
+  const navigate = useNavigate()
   const rotates = [-1, 0.8, -0.5, 1.2, -0.3, 0.5]
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       transition={{ ...springGentle, delay: index * 0.08 }}
+      onClick={() => navigate(`/itinerary/${trip.id}`)}
+      className="cursor-pointer"
     >
       <PolaroidCard rotate={rotates[index % rotates.length]} className="w-full mb-4">
         {/* Destination header */}
