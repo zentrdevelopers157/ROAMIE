@@ -1,130 +1,259 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  ArrowRight,
-  Compass,
-  MapPin,
-  Sun,
-  Moon,
-  Mountain,
-  Umbrella,
-  Utensils,
-  Calendar,
-  Clock,
-  IndianRupee,
-  Star,
-} from 'lucide-react'
+import { Heart, Mic, Send, MapPin } from 'lucide-react'
 import { useRoamie, generateId } from '../store/RoamieContext'
 import type { ItineraryItem } from '../store/RoamieContext'
 
-/* ===== SPRING ===== */
-const springBounce = { type: 'spring' as const, stiffness: 300, damping: 18 }
-const springBub = { type: 'spring' as const, stiffness: 250, damping: 16 }
+/* ===== SPRINGS ===== */
+const springBubble = { type: 'spring' as const, stiffness: 280, damping: 18 }
+const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
+const springStiff = { type: 'spring' as const, stiffness: 400, damping: 25 }
 
-/* ===== TOPOGRAPHIC MAP CSS ===== */
-const topoBg = {
+/* ===== TOPOGRAPHIC BG ===== */
+const topoBg: React.CSSProperties = {
   backgroundColor: '#0A0A12',
   backgroundImage: `
-    radial-gradient(ellipse at 20% 50%, rgba(0, 212, 196, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 30%, rgba(0, 212, 196, 0.04) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(42, 107, 255, 0.03) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 80%, rgba(138, 43, 226, 0.03) 0%, transparent 50%),
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300D4C4' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
   `,
-} as React.CSSProperties
+}
 
-/* ===== CHAT MESSAGE BUBBLES ===== */
-function RoamieBubble({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+/* ===== DESTINATION DATA ===== */
+const quickReplies = [
+  { label: 'Surprise me 🎲', key: 'surprise' },
+  { label: 'Mountains 🏔️', key: 'mountains' },
+  { label: 'Beaches 🌊', key: 'beaches' },
+  { label: 'City Life 🏙️', key: 'city' },
+] as const
+
+type DestKey = (typeof quickReplies)[number]['key']
+
+const destData: Record<DestKey, { name: string; month: string; emoji: string; moodDesc: string }> = {
+  surprise: { name: 'Bali', month: 'May', emoji: '🌴', moodDesc: 'tropical paradise with hidden waterfall gems' },
+  mountains: { name: 'Manali', month: 'February', emoji: '❄️', moodDesc: 'cozy mountain cafes and snow-covered pine trails' },
+  beaches: { name: 'Goa', month: 'December', emoji: '☀️', moodDesc: 'golden sand beaches and lazy ocean sunsets' },
+  city: { name: 'Tokyo', month: 'April', emoji: '🗼', moodDesc: 'neon-lit streets and hidden ramen shops' },
+}
+
+const moodImagesByDest: Record<DestKey, string[]> = {
+  surprise: [
+    'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1559644702-59f9e5a9e798?w=600&q=85&fm=webp',
+  ],
+  mountains: [
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=85&fm=webp',
+  ],
+  beaches: [
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1590523741831-ab7e8b4f9c7f?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1540202404-a2f29016b523?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=600&q=85&fm=webp',
+  ],
+  city: [
+    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=600&q=85&fm=webp',
+    'https://images.unsplash.com/photo-1549693578-d683be217e58?w=600&q=85&fm=webp',
+  ],
+}
+
+/* ===== MOCK ITINERARIES ===== */
+const itineraries: Record<DestKey, { time: string; title: string; desc: string }[]> = {
+  surprise: [
+    { time: '06:30', title: 'Sunrise at Tanah Lot', desc: 'Watch the sun rise over the iconic sea temple' },
+    { time: '09:00', title: 'Ubud Monkey Forest', desc: 'Wander through sacred jungle with curious macaques' },
+    { time: '12:30', title: 'Rice Terrace Lunch', desc: 'Fresh nasi campur overlooking Tegallalang terraces' },
+    { time: '15:00', title: 'Uluwatu Sunset', desc: 'Cliffside Kecak dance performance at dusk' },
+  ],
+  mountains: [
+    { time: '07:00', title: 'Snowy Morning Chai', desc: 'Steaming masala chai with Himalayan mountain views' },
+    { time: '09:30', title: 'Hadimba Temple Walk', desc: 'Explore the ancient temple surrounded by deodar forests' },
+    { time: '13:00', title: 'Café Hopping in Old Manali', desc: 'Cozy cafés with wooden interiors and live acoustic music' },
+    { time: '16:00', title: 'Solang Valley Snow Sports', desc: 'Skiing, snow tubing, and snowmobile adventures' },
+  ],
+  beaches: [
+    { time: '07:30', title: 'Beachside Yoga', desc: 'Morning flow on the sand as the waves roll in' },
+    { time: '10:00', title: 'Spice Plantation Tour', desc: 'Walk through aromatic spice gardens and try fresh pepper' },
+    { time: '13:30', title: 'Shack Lunch on Anjuna', desc: 'Goan fish curry rice with a chilled coconut water' },
+    { time: '17:00', title: 'Sunset Cruise', desc: 'Boating on the Mandovi river with live fado music' },
+  ],
+  city: [
+    { time: '06:00', title: 'Tsukiji Outer Market', desc: 'Fresh sushi breakfast and wandering through seafood stalls' },
+    { time: '09:30', title: 'Meiji Shrine Serenity', desc: 'Peaceful forest walk through the iconic Shinto shrine' },
+    { time: '12:00', title: 'Shibuya & Ramen Alley', desc: 'Cross the scramble then slurp tonkotsu ramen' },
+    { time: '15:30', title: 'Akihabara Arcade Hop', desc: 'Retro games, anime shops, and neon wonderland' },
+  ],
+}
+
+/* ===== ICON MAP ===== */
+const iconForTime = (time: string) => {
+  const h = parseInt(time.split(':')[0], 10)
+  if (h < 8) return '🌅'
+  if (h < 12) return '☕'
+  if (h < 15) return '🍽️'
+  if (h < 18) return '🎯'
+  return '🌆'
+}
+
+/* ===== ROAMIE BUBBLE (torn paper tail, gradient text) ===== */
+function RoamieBubble({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode
+  delay?: number
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -30, y: 10 }}
+      initial={{ opacity: 0, x: -30, y: 8 }}
       animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ ...springBub, delay }}
-      className="flex items-start gap-2.5 max-w-[85%]"
+      transition={{ ...springBubble, delay }}
+      className="flex items-start gap-2 max-w-[88%]"
     >
       {/* Avatar */}
-      <div className="flex-shrink-0 mt-1">
-        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-card-bg border border-brand-cyan/20"
-          style={{ boxShadow: '0 0 10px rgba(0, 212, 196, 0.1)' }}>
-          <svg width="14" height="14" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="25" y="35" width="50" height="45" rx="8" fill="#00D4C4" opacity="0.9" />
-            <path d="M25 50h50v3H25z" fill="#0A0A12" opacity="0.3" />
-            <rect x="42" y="27" width="16" height="8" rx="4" fill="#2A6BFF" opacity="0.8" />
-            <rect x="25" y="38" width="5" height="30" rx="2.5" fill="#8A2BE2" opacity="0.6" />
-            <rect x="70" y="38" width="5" height="30" rx="2.5" fill="#8A2BE2" opacity="0.6" />
+      <div className="flex-shrink-0 mt-0.5">
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center"
+          style={{
+            background: '#14141F',
+            border: '1px solid rgba(0, 212, 196, 0.2)',
+            boxShadow: '0 0 12px rgba(0, 212, 196, 0.08)',
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 100 100" fill="none">
+            <rect x="22" y="32" width="56" height="48" rx="8" fill="#00D4C4" opacity="0.9" />
+            <path d="M22 48h56v3H22z" fill="#0A0A12" opacity="0.25" />
+            <rect x="40" y="24" width="20" height="10" rx="5" fill="#2A6BFF" opacity="0.8" />
+            <rect x="22" y="36" width="6" height="32" rx="3" fill="#8A2BE2" opacity="0.6" />
+            <rect x="72" y="36" width="6" height="32" rx="3" fill="#8A2BE2" opacity="0.6" />
           </svg>
         </div>
       </div>
 
-      {/* Bubble with torn-paper tail */}
-      <div className="relative">
+      {/* Bubble with torn paper tail SVG */}
+      <div className="relative flex">
+        {/* Torn edge tail SVG */}
+        <svg
+          width="14"
+          height="32"
+          viewBox="0 0 14 32"
+          className="flex-shrink-0 -mr-[1px] relative z-10"
+          style={{ filter: 'drop-shadow(-2px 2px 6px rgba(0,0,0,0.3))' }}
+        >
+          <path
+            d="M14,0 C10,2 12,6 7,8 C4,9 6,12 3,14 C1,15 3,18 0,20 C3,22 1,25 5,27 C8,28 6,30 8,31 C10,31.5 12,32 14,32 Z"
+            fill="#14141F"
+          />
+        </svg>
+
+        {/* Content */}
         <div
-          className="relative bg-card-bg rounded-lg px-3.5 py-2.5 text-sm text-text-primary leading-relaxed shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+          className="relative px-3.5 py-2.5 text-sm leading-relaxed shadow-[0_3px_14px_rgba(0,0,0,0.35)]"
           style={{
-            clipPath: 'polygon(0% 8%, 6% 4%, 10% 8%, 14% 3%, 100% 0%, 100% 100%, 14% 100%, 10% 96%, 6% 100%, 0% 92%)',
-            borderLeft: '1px solid rgba(0, 212, 196, 0.1)',
+            background: '#14141F',
+            borderTopRightRadius: '14px',
+            borderBottomRightRadius: '14px',
+            borderBottomLeftRadius: '4px',
+            borderTopLeftRadius: '0',
+            borderLeft: '1px solid rgba(0, 212, 196, 0.08)',
           }}
         >
-          {children}
+          {/* Gradient text in Caveat */}
+          <div className="font-handwritten text-[15px] gradient-text font-medium leading-relaxed">
+            {children}
+          </div>
         </div>
       </div>
     </motion.div>
   )
 }
 
-function UserBubble({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+/* ===== USER BUBBLE (irregular border radius) ===== */
+function UserBubble({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode
+  delay?: number
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: 30, y: 10 }}
+      initial={{ opacity: 0, x: 30, y: 8 }}
       animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ ...springBub, delay }}
-      className="flex justify-end max-w-[80%] ml-auto"
+      transition={{ ...springBubble, delay }}
+      className="flex justify-end max-w-[78%] ml-auto"
     >
       <div
-        className="px-3.5 py-2.5 rounded-lg text-sm text-white leading-relaxed shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+        className="px-3.5 py-2.5 text-sm text-white leading-relaxed shadow-[0_3px_14px_rgba(138,43,226,0.2)]"
         style={{
           background: '#8A2BE2',
-          borderBottomRightRadius: '4px',
-          borderTopRightRadius: '12px 8px',
-          borderBottomLeftRadius: '12px',
-          borderTopLeftRadius: '12px 10px',
-          boxShadow: '0 2px 15px rgba(138, 43, 226, 0.15)',
+          borderRadius: '16px 20px 18px 14px',
+          boxShadow: '0 3px 14px rgba(138, 43, 226, 0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
         }}
       >
-        {children}
+        <p className="font-body text-[15px] text-white/95 leading-relaxed">{children}</p>
       </div>
     </motion.div>
   )
 }
 
-/* ===== TYPING INDICATOR ===== */
+/* ===== TYPING INDICATOR (3 bouncing dots with spring) ===== */
 function TypingDots() {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex items-start gap-2.5 max-w-[60%]"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="flex items-start gap-2 max-w-[60%]"
     >
-      <div className="flex-shrink-0 mt-1">
-        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-card-bg border border-brand-cyan/20">
+      <div className="flex-shrink-0 mt-0.5">
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center"
+          style={{
+            background: '#14141F',
+            border: '1px solid rgba(0, 212, 196, 0.15)',
+          }}
+        >
           <svg width="14" height="14" viewBox="0 0 100 100" fill="none">
-            <rect x="25" y="35" width="50" height="45" rx="8" fill="#00D4C4" opacity="0.9" />
-            <rect x="42" y="27" width="16" height="8" rx="4" fill="#2A6BFF" opacity="0.8" />
+            <rect x="22" y="32" width="56" height="48" rx="8" fill="#00D4C4" opacity="0.9" />
+            <rect x="40" y="24" width="20" height="10" rx="5" fill="#2A6BFF" opacity="0.8" />
           </svg>
         </div>
       </div>
-      <div className="bg-card-bg rounded-lg px-4 py-3 flex gap-1.5 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
-        style={{ clipPath: 'polygon(0% 8%, 6% 4%, 10% 8%, 100% 0%, 100% 100%, 0% 92%)' }}>
+
+      <div
+        className="flex items-center gap-1.5 px-4 py-3"
+        style={{
+          background: '#14141F',
+          borderTopRightRadius: '14px',
+          borderBottomRightRadius: '14px',
+          borderBottomLeftRadius: '4px',
+          borderTopLeftRadius: '0',
+          borderLeft: '1px solid rgba(0, 212, 196, 0.08)',
+        }}
+      >
         {[0, 1, 2].map((i) => (
-          <motion.div
+          <motion.span
             key={i}
-            className="w-1.5 h-1.5 rounded-full bg-brand-cyan"
-            animate={{ y: [0, -5, 0], opacity: [0.5, 1, 0.5] }}
+            className="block w-1.5 h-1.5 rounded-full"
+            style={{ background: '#00D4C4' }}
+            animate={{ y: [0, -6, 0] }}
             transition={{
-              duration: 0.8,
+              type: 'spring',
+              stiffness: 400,
+              damping: 10,
+              mass: 0.5,
               repeat: Infinity,
-              delay: i * 0.15,
-              ease: 'easeInOut',
+              repeatDelay: 0.15,
+              delay: i * 0.18,
             }}
           />
         ))}
@@ -133,546 +262,771 @@ function TypingDots() {
   )
 }
 
-/* ===== PIN-BACK BUTTON CHIPS ===== */
-function PinChip({
+/* ===== QUICK REPLY CHIP ===== */
+function QuickReplyChip({
   label,
-  selected,
   onClick,
-  icon: Icon,
+  index,
 }: {
   label: string
-  selected: boolean
   onClick: () => void
-  icon?: React.ComponentType<{ size?: number; strokeWidth?: number }>
+  index: number
 }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...springGentle, delay: 0.3 + index * 0.08 }}
+      whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.92 }}
       onClick={onClick}
-      className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-display font-semibold tracking-wide transition-all duration-300"
+      className="relative px-4 py-2.5 rounded-full text-sm font-display font-semibold tracking-wide transition-shadow duration-300"
       style={{
-        background: selected
-          ? 'linear-gradient(135deg, #00D4C4, #2A6BFF)'
-          : 'transparent',
-        color: selected ? '#0A0A12' : '#F0F0F5',
-        border: selected
-          ? '1.5px solid transparent'
-          : '1.5px solid rgba(0, 212, 196, 0.3)',
-        boxShadow: selected
-          ? '0 0 15px rgba(0, 212, 196, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
-          : '0 2px 8px rgba(0,0,0,0.2)',
+        background: 'rgba(20, 20, 31, 0.85)',
+        backdropFilter: 'blur(8px)',
+        border: '1.5px solid rgba(0, 212, 196, 0.25)',
+        color: '#F0F0F5',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 20px rgba(0, 212, 196, 0.04)',
       }}
     >
-      {Icon && <Icon size={14} strokeWidth={2} />}
+      {/* Cyan glow border on hover */}
+      <div
+        className="absolute inset-0 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          boxShadow: '0 0 18px rgba(0, 212, 196, 0.12), inset 0 0 18px rgba(0, 212, 196, 0.04)',
+        }}
+      />
       {label}
     </motion.button>
   )
 }
 
-/* ===== MOOD CARD (for Step 4) ===== */
-function MoodCard({
-  image,
+/* ===== MOOD IMAGE CARD (with heart overlay) ===== */
+function MoodImageCard({
+  src,
   liked,
   onToggle,
   index,
 }: {
-  image: string
+  src: string
   liked: boolean
   onToggle: () => void
   index: number
 }) {
   return (
     <motion.button
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...springBounce, delay: 0.1 + index * 0.08 }}
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ ...springGentle, delay: 0.1 + index * 0.06 }}
       onClick={onToggle}
-      className={`relative rounded-sm overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)] ${index % 2 === 0 ? 'mt-0' : 'mt-3'}`}
       whileTap={{ scale: 0.95 }}
+      className="relative flex-shrink-0 w-28 h-32 rounded-sm overflow-hidden group cursor-pointer"
+      style={{
+        boxShadow: liked
+          ? '0 0 18px rgba(0, 212, 196, 0.25), 0 4px 12px rgba(0,0,0,0.4)'
+          : '0 4px 12px rgba(0,0,0,0.3)',
+        border: liked ? '1.5px solid rgba(0, 212, 196, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+        transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+      }}
     >
+      {/* Image */}
       <div
-        className="w-full h-24 bg-cover bg-center"
-        style={{ backgroundImage: `url(${image})` }}
+        className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+        style={{ backgroundImage: `url(${src})` }}
       />
 
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+      {/* Gradient overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: liked
+            ? 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,212,196,0.15) 100%)'
+            : 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.35) 100%)',
+        }}
+      />
 
-      {/* Hand-drawn star */}
-      {liked && (
+      {/* Heart overlay */}
+      <div className="absolute inset-0 flex items-center justify-center">
         <motion.div
-          initial={{ scale: 0, rotate: -30 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 12 }}
-          className="absolute top-1 right-1 z-10"
+          animate={liked ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+          transition={{ duration: 0.3 }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-            style={{ filter: 'drop-shadow(0 0 6px rgba(0, 212, 196, 0.5))' }}>
-            <defs>
-              <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00D4C4" />
-                <stop offset="100%" stopColor="#8A2BE2" />
-              </linearGradient>
-            </defs>
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-              fill="url(#starGrad)" stroke="rgba(255,255,255,0.5)" strokeWidth="0.5" />
-          </svg>
+          <Heart
+            size={28}
+            strokeWidth={2}
+            style={{
+              fill: liked ? '#00D4C4' : 'rgba(255,255,255,0)',
+              stroke: liked ? '#00D4C4' : 'rgba(255,255,255,0.7)',
+              filter: liked ? 'drop-shadow(0 0 8px rgba(0, 212, 196, 0.5))' : 'none',
+              transition: 'all 0.3s ease',
+            }}
+          />
         </motion.div>
-      )}
+      </div>
+
+      {/* Bottom label */}
+      <div className="absolute bottom-0 inset-x-0 p-1.5">
+        <div
+          className="text-[9px] font-display font-semibold text-center tracking-wider uppercase"
+          style={{
+            color: liked ? '#00D4C4' : 'rgba(255,255,255,0.6)',
+            transition: 'color 0.3s ease',
+          }}
+        >
+          {liked ? 'Liked' : 'Tap to ❤️'}
+        </div>
+      </div>
     </motion.button>
   )
 }
 
-/* ===== NOTEBOOK PAPER ===== */
-function NotebookPaper({ children }: { children: React.ReactNode }) {
+/* ===== SPINNING COMPASS CARD ===== */
+function LoadingCompass() {
   return (
-    <div
-      className="relative rounded-sm p-4 shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
-      style={{
-        backgroundColor: '#12121E',
-        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(0, 212, 196, 0.06) 23px, rgba(0, 212, 196, 0.06) 24px)',
-        borderLeft: '2px solid rgba(0, 212, 196, 0.15)',
-      }}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="max-w-[200px] mx-auto my-4"
     >
-      {children}
-    </div>
-  )
-}
+      <div
+        className="relative rounded-sm p-4 text-center shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+        style={{
+          background: '#14141F',
+          borderLeft: '2px solid rgba(0, 212, 196, 0.15)',
+        }}
+      >
+        {/* Spinning compass */}
+        <div className="relative w-16 h-16 mx-auto mb-3">
+          {/* Outer glow rings */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{ boxShadow: ['0 0 15px rgba(0,212,196,0.15)', '0 0 30px rgba(0,212,196,0.3)', '0 0 15px rgba(0,212,196,0.15)'] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
 
-/* ===== ITINERARY ITEM ===== */
-function ItineraryItem({
-  time,
-  title,
-  description,
-  icon: Icon,
-  isLast = false,
-}: {
-  time: string
-  title: string
-  description: string
-  icon?: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
-  isLast?: boolean
-}) {
-  return (
-    <div className="relative flex gap-3 pb-4">
-      {/* Timeline line */}
-      {!isLast && (
-        <div className="absolute left-[7px] top-5 bottom-0 w-[1.5px] bg-brand-cyan/20"
-          style={{ background: 'repeating-linear-gradient(0deg, rgba(0, 212, 196, 0.3), rgba(0, 212, 196, 0.3) 3px, transparent 3px, transparent 6px)' }} />
-      )}
+          {/* Additional trailing glow */}
+          <motion.div
+            className="absolute inset-[-8px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle at center, rgba(0,212,196,0.06) 0%, transparent 70%)',
+            }}
+            animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.1, 1] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
 
-      {/* Timeline dot */}
-      <div className="flex-shrink-0 mt-0.5">
-        <div className="w-4 h-4 rounded-full border-2 border-brand-cyan bg-base-bg flex items-center justify-center"
-          style={{ boxShadow: '0 0 8px rgba(0, 212, 196, 0.2)' }}>
-          {Icon && <Icon size={8} strokeWidth={3} className="text-brand-cyan" />}
+          {/* Hand-drawn compass SVG */}
+          <motion.div
+            className="relative z-10 w-full h-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+          >
+            <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
+              {/* Outer ring - slightly irregular hand-drawn look */}
+              <path
+                d="M40 6 C50 5 62 10 68 18 C74 26 76 38 74 48 C72 58 66 68 56 72 C46 76 34 76 24 72 C14 68 8 58 6 48 C4 38 6 26 12 18 C18 10 30 7 40 6Z"
+                stroke="#00D4C4"
+                strokeWidth="1.8"
+                fill="none"
+                opacity="0.8"
+                strokeDasharray="2 3"
+              />
+              {/* Inner ring */}
+              <path
+                d="M40 18 C47 17 55 21 59 27 C63 33 64 41 62 48 C60 55 55 61 48 63 C41 65 33 64 27 59 C21 54 18 46 18 39 C18 32 22 25 29 21 C34 18.5 37 18 40 18Z"
+                stroke="#00D4C4"
+                strokeWidth="0.8"
+                fill="none"
+                opacity="0.4"
+                strokeDasharray="1.5 2"
+              />
+              {/* Crosshairs - hand-drawn slightly angled */}
+              <line x1="40" y1="10" x2="40" y2="30" stroke="#00D4C4" strokeWidth="1.2" opacity="0.5" />
+              <line x1="40" y1="50" x2="40" y2="70" stroke="#2A6BFF" strokeWidth="1.2" opacity="0.5" />
+              <line x1="10" y1="40" x2="30" y2="40" stroke="#8A2BE2" strokeWidth="1.2" opacity="0.5" />
+              <line x1="50" y1="40" x2="70" y2="40" stroke="#8A2BE2" strokeWidth="1.2" opacity="0.5" />
+              {/* North arrow - bold */}
+              <path
+                d="M40 12 L44 28 L42 30 L40 34 L38 30 L36 28 Z"
+                fill="#00D4C4"
+                opacity="0.9"
+              />
+              {/* South arrow */}
+              <path
+                d="M40 68 L44 52 L42 50 L40 46 L38 50 L36 52 Z"
+                fill="#2A6BFF"
+                opacity="0.5"
+              />
+              {/* East arrow */}
+              <path
+                d="M68 40 L52 36 L50 38 L46 40 L50 42 L52 44 Z"
+                fill="#8A2BE2"
+                opacity="0.5"
+              />
+              {/* West arrow */}
+              <path
+                d="M12 40 L28 44 L30 42 L34 40 L30 38 L28 36 Z"
+                fill="#8A2BE2"
+                opacity="0.5"
+              />
+              {/* Center dot */}
+              <circle cx="40" cy="40" r="3" fill="#00D4C4" />
+              <circle cx="40" cy="40" r="1.5" fill="#0A0A12" />
+            </svg>
+          </motion.div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 bg-card-bg/60 rounded-sm px-3 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-        style={{ borderLeft: '1px solid rgba(0, 212, 196, 0.08)' }}>
-        <span className="text-[10px] font-mono text-brand-cyan/70">{time}</span>
-        <p className="text-sm font-display font-semibold text-text-primary mt-0.5">{title}</p>
-        <p className="text-xs font-body text-text-secondary mt-0.5">{description}</p>
+        {/* Text */}
+        <p
+          className="font-handwritten text-sm gradient-text font-medium"
+          style={{ backgroundSize: '200% 200%' }}
+        >
+          Finding hidden gems...
+        </p>
+        <p className="text-[10px] font-body text-text-secondary mt-1 opacity-60">
+          weaving your itinerary
+        </p>
+
+        {/* Bottom decorative line */}
+        <div
+          className="mt-3 mx-auto w-12 h-[1px]"
+          style={{
+            background: 'linear-gradient(90deg, transparent, #00D4C4, transparent)',
+            opacity: 0.4,
+          }}
+        />
       </div>
-    </div>
+    </motion.div>
   )
 }
 
-/* ===== DATA ===== */
-const moodImages = [
-  { image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=900&q=85&fm=webp' },
-  { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp' },
-  { image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=900&q=85&fm=webp' },
-  { image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=85&fm=webp' },
-]
+/* ===== TRIP REVEAL CARD (notebook paper) ===== */
+function TripRevealCard({
+  destKey,
+  onViewPlan,
+}: {
+  destKey: DestKey
+  onViewPlan: () => void
+}) {
+  const data = destData[destKey]
+  const items = itineraries[destKey]
 
-const itineraryData = [
-  { time: '08:00 AM', title: 'Breakfast at Café Bodega', description: 'Start your day with fresh croissants and local brew', icon: Utensils },
-  { time: '10:30 AM', title: 'Explore the Old Quarter', description: 'Wander through colorful streets and hidden alleys', icon: MapPin },
-  { time: '01:00 PM', title: 'Lunch by the Beach', description: 'Fresh seafood with ocean views', icon: Sun },
-  { time: '04:00 PM', title: 'Sunset Kayaking', description: 'Paddle through calm waters as the sun sets', icon: Umbrella },
-]
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ ...springGentle, delay: 0.15 }}
+      className="max-w-[95%] mx-auto"
+    >
+      <div
+        className="relative rounded-sm p-4 shadow-[0_6px_30px_rgba(0,0,0,0.5)] overflow-hidden"
+        style={{
+          backgroundColor: '#12121E',
+          clipPath: 'polygon(0% 0%, 98% 0%, 100% 4%, 100% 96%, 98% 100%, 0% 100%)',
+          // Torn left edge via pseudo
+        }}
+      >
+        {/* Torn left edge SVG */}
+        <div className="absolute left-0 top-0 bottom-0 w-[6px] pointer-events-none">
+          <svg
+            width="6"
+            height="100%"
+            viewBox="0 0 6 200"
+            preserveAspectRatio="none"
+            className="h-full w-full"
+          >
+            <path
+              d="M6,0 C3,2 5,6 2,8 C1,9 3,12 0,14 C3,16 1,19 4,21 C5,22 3,25 6,27 L6,200 L0,200 L0,0 Z"
+              fill="#12121E"
+            />
+          </svg>
+        </div>
 
-/* ===== MAIN CHAT COMPONENT ===== */
+        {/* Faint glowing blue ruled lines */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-40"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(0, 212, 196, 0.08) 23px, rgba(0, 212, 196, 0.08) 24px)',
+          }}
+        />
+
+        {/* Header */}
+        <div className="relative z-10 flex items-center justify-between mb-3 pb-2">
+          <div>
+            <h3 className="font-handwritten text-base gradient-text font-medium">
+              {data.name} Itinerary
+            </h3>
+            <p className="text-[10px] font-body text-text-secondary/60 flex items-center gap-1">
+              <MapPin size={10} strokeWidth={2} /> {data.month} · 4 Days
+            </p>
+          </div>
+          <div
+            className="text-lg px-2 py-1 rounded-sm"
+            style={{
+              background: 'rgba(0, 212, 196, 0.06)',
+              border: '1px solid rgba(0, 212, 196, 0.1)',
+            }}
+          >
+            <span className="font-handwritten text-sm gradient-text">Day 1</span>
+          </div>
+        </div>
+
+        {/* Timeline with wobbly hand-drawn dashed SVG line */}
+        <div className="relative z-10 pl-5">
+          {/* Wobbly dashed line SVG */}
+          <svg
+            className="absolute left-[3px] top-1 bottom-1 pointer-events-none"
+            width="8"
+            height="240"
+            viewBox="0 0 8 240"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M4,0 C6,3 2,7 4,11 C6,15 2,19 4,23 C6,27 2,31 4,35 C6,39 2,43 4,47 C6,51 2,55 4,59 C6,63 2,67 4,71 C6,75 2,79 4,83 C6,87 2,91 4,95 C6,99 2,103 4,107 C6,111 2,115 4,119 C6,123 2,127 4,131 C6,135 2,139 4,143 C6,147 2,151 4,155 C6,159 2,163 4,167 C6,171 2,175 4,179 C6,183 2,187 4,191 C6,195 2,199 4,203 C6,207 2,211 4,215 C6,219 2,223 4,227 C6,231 2,235 4,239"
+              stroke="#00D4C4"
+              strokeWidth="1.5"
+              strokeDasharray="2.5 3.5"
+              fill="none"
+              opacity="0.5"
+              style={{ filter: 'drop-shadow(0 0 3px rgba(0, 212, 196, 0.2))' }}
+            />
+            {/* Glowing duplicate underneath */}
+            <path
+              d="M4,0 C6,3 2,7 4,11 C6,15 2,19 4,23 C6,27 2,31 4,35 C6,39 2,43 4,47 C6,51 2,55 4,59 C6,63 2,67 4,71 C6,75 2,79 4,83 C6,87 2,91 4,95 C6,99 2,103 4,107 C6,111 2,115 4,119 C6,123 2,127 4,131 C6,135 2,139 4,143 C6,147 2,151 4,155 C6,159 2,163 4,167 C6,171 2,175 4,179 C6,183 2,187 4,191 C6,195 2,199 4,203 C6,207 2,211 4,215 C6,219 2,223 4,227 C6,231 2,235 4,239"
+              stroke="#00D4C4"
+              strokeWidth="3"
+              strokeDasharray="2.5 3.5"
+              fill="none"
+              opacity="0.1"
+              style={{ filter: 'blur(4px)' }}
+            />
+          </svg>
+
+          {/* Itinerary items */}
+          {items.map((item, i) => (
+            <div key={i} className="relative flex gap-2.5 pb-4 last:pb-1">
+              {/* Timeline dot - hand-drawn circle */}
+              <div className="flex-shrink-0 mt-0.5 relative z-10">
+                <div
+                  className="w-[10px] h-[10px] rounded-full flex items-center justify-center"
+                  style={{
+                    background: '#12121E',
+                    border: '1.5px solid rgba(0, 212, 196, 0.5)',
+                    boxShadow: '0 0 6px rgba(0, 212, 196, 0.15)',
+                  }}
+                >
+                  <div
+                    className="w-[4px] h-[4px] rounded-full"
+                    style={{ background: '#00D4C4' }}
+                  />
+                </div>
+              </div>
+
+              {/* Content card */}
+              <div
+                className="flex-1 rounded-sm px-2.5 py-1.5"
+                style={{
+                  background: 'rgba(20, 20, 31, 0.5)',
+                  borderLeft: '1px solid rgba(0, 212, 196, 0.06)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px]">{iconForTime(item.time)}</span>
+                  <span
+                    className="text-[10px] font-mono tracking-wider"
+                    style={{ color: 'rgba(0, 212, 196, 0.6)' }}
+                  >
+                    {item.time}
+                  </span>
+                </div>
+                <p className="text-sm font-display font-semibold text-text-primary mt-0.5 leading-tight">
+                  {item.title}
+                </p>
+                <p className="text-[11px] font-body leading-tight mt-0.5" style={{ color: '#8888A0' }}>
+                  {item.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* View Full Plan button */}
+        <motion.button
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={onViewPlan}
+          className="relative z-10 mt-1 w-full py-2.5 rounded-full text-xs font-display font-semibold text-white tracking-wider overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
+            backgroundSize: '200% 200%',
+            animation: 'gradientShift 4s ease-in-out infinite',
+            boxShadow: '0 0 20px rgba(0, 212, 196, 0.2), 0 4px 12px rgba(0,0,0,0.3)',
+          }}
+        >
+          View Full Plan
+          <div
+            className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), transparent)',
+            }}
+          />
+        </motion.button>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ===== MAIN PLAN COMPONENT ===== */
 export default function Plan() {
   const navigate = useNavigate()
   const { dispatch } = useRoamie()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [step, setStep] = useState(0) // 0=greeting, 1=input, 2=prefs, 3=mood, 4=generating, 5=reveal, 6=refinement
-  const [destination, setDestination] = useState('')
-  const [showChips, setShowChips] = useState(false)
-  const [selectedPrefs, setSelectedPrefs] = useState<string[]>([])
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  /* ---- State Machine ---- */
+  const [step, setStep] = useState(0)
+  // 0 = greeting + chips visible
+  // 1 = user clicked chip, typing indicator
+  // 2 = mood intro message + mood images
+  // 3 = user liked mood, confirmation + loading
+  // 4 = reveal itinerary card
+
+  const [selectedKey, setSelectedKey] = useState<DestKey | null>(null)
+  const [userMessage, setUserMessage] = useState('')
   const [likedMoods, setLikedMoods] = useState<number[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [inputText, setInputText] = useState('')
+  const [showMoodImages, setShowMoodImages] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
-  const [checked, setChecked] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
 
+  /* ---- Effects ---- */
   const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-    }, 100)
-  }
-
-  // Auto-scroll on step change
-  useEffect(() => { scrollToBottom() }, [step, showChips, showReveal])
-
-  // Step 0: Initial greeting auto-advances
-  useEffect(() => {
-    if (step === 0) {
-      const t = setTimeout(() => {
-      setStep(1)
-      scrollToBottom()
-      }, 2000)
-      return () => clearTimeout(t)
-    }
-  }, [step])
-
-  const handleDestinationSubmit = () => {
-    if (!destination.trim()) return
-    setStep(2)
-
-    // Show chips after a beat
-    setTimeout(() => {
-      setShowChips(true)
-      scrollToBottom()
-    }, 800)
-  }
-
-  const togglePref = (pref: string) => {
-    setSelectedPrefs((prev) =>
-      prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
-    )
-  }
-
-  const handlePrefsDone = () => {
-    if (selectedPrefs.length === 0) return
-    setStep(3)
-    scrollToBottom()
-  }
-
-  const toggleMood = (i: number) => {
-    setLikedMoods((prev) =>
-      prev.includes(i) ? prev.filter((m) => m !== i) : [...prev, i]
-    )
-  }
-
-  const handleMoodDone = () => {
-    setStep(4)
-    setIsGenerating(true)
-    scrollToBottom()
-
-    // Simulate generation
-    // Save trip to context
-    const itinerary: ItineraryItem[] = [] // real itinerary would be generated by AI
-    dispatch({
-      type: 'ADD_TRIP',
-      payload: {
-        id: generateId(),
-        destination,
-        preferences: selectedPrefs,
-        likedMoods,
-        itinerary,
-        createdAt: new Date().toISOString(),
-      },
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      })
     })
-
-    setTimeout(() => {
-      setIsGenerating(false)
-      setStep(5)
-      setTimeout(() => setShowReveal(true), 300)
-      scrollToBottom()
-    }, 2500)
   }
 
-  const handleRefinement = () => {
-    setChecked(true)
+  useEffect(() => { scrollToBottom() }, [step, showMoodImages, showReveal, likedMoods])
+
+  // Step 0 → show chips (greeting is instant, no delay needed)
+
+  // Handle chip click → transition to step 1
+  const handleChipClick = (key: DestKey) => {
+    setSelectedKey(key)
+    setUserMessage(quickReplies.find((q) => q.key === key)?.label ?? '')
+    setStep(1)
+
+    // After 1.5s → show mood intro
     setTimeout(() => {
-      setStep(6)
+      setStep(2)
+      setTimeout(() => setShowMoodImages(true), 200)
       scrollToBottom()
-    }, 600)
+    }, 1500)
+  }
+
+  // Handle mood like
+  const handleMoodToggle = (i: number) => {
+    if (likedMoods.includes(i)) {
+      setLikedMoods((prev) => prev.filter((m) => m !== i))
+    } else {
+      setLikedMoods([i]) // only one at a time for simplicity
+      // Transition to loading after a beat
+      setTimeout(() => {
+        setStep(3)
+        scrollToBottom()
+
+        // After 3s loading → reveal
+        setTimeout(() => {
+          setStep(4)
+          setIsSaved(true)
+
+          // Save trip to context
+          const itinerary: ItineraryItem[] = (itineraries[selectedKey ?? 'mountains']).map((item) => ({
+            time: item.time,
+            title: item.title,
+            description: item.desc,
+          }))
+
+          dispatch({
+            type: 'ADD_TRIP',
+            payload: {
+              id: generateId(),
+              destination: destData[selectedKey ?? 'mountains'].name,
+              preferences: [selectedKey ?? 'mountains'],
+              likedMoods: [i],
+              itinerary,
+              createdAt: new Date().toISOString(),
+            },
+          })
+
+          setTimeout(() => setShowReveal(true), 250)
+          scrollToBottom()
+        }, 3000)
+      }, 400)
+    }
+  }
+
+  const handleViewPlan = () => {
+    navigate('/trips')
+  }
+
+  const handleInputSend = () => {
+    if (!inputText.trim()) return
+    // Just add as a user bubble for now
+    // In a real app this would go to the AI
+    setInputText('')
   }
 
   return (
-    <div className="relative h-[calc(100dvh-80px)] flex flex-col" style={topoBg}>
-      {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-[#2A2A3E]/40">
+    <div className="relative h-dvh flex flex-col" style={topoBg}>
+      {/* ===== Header ===== */}
+      <div
+        className="flex-shrink-0 z-20 px-4 pt-3 pb-2.5"
+        style={{
+          borderBottom: '1px solid rgba(42, 42, 62, 0.4)',
+          background: 'rgba(10, 10, 18, 0.8)',
+          backdropFilter: 'blur(12px)',
+        }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-display font-semibold text-text-primary">
-              Plan a Trip
+            <h1 className="text-base font-display font-semibold gradient-text">
+              Plan with ROAMIE
             </h1>
-            <p className="text-[10px] font-body text-text-secondary -mt-0.5">ROAMIE will build the perfect itinerary</p>
+            <p className="text-[10px] font-body tracking-wide" style={{ color: '#8888A0' }}>
+              Let's build your perfect trip ✨
+            </p>
           </div>
-          <button onClick={() => navigate('/home')} className="text-[10px] font-display text-text-secondary tracking-wider uppercase hover:text-text-primary transition-colors">
-            Cancel
+          <button
+            onClick={() => navigate('/home')}
+            className="text-[9px] font-display font-semibold tracking-[0.15em] uppercase px-3 py-1.5 rounded-full transition-all duration-200"
+            style={{
+              color: '#8888A0',
+              border: '1px solid rgba(136, 136, 160, 0.15)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#F0F0F5'
+              e.currentTarget.style.borderColor = 'rgba(240, 240, 245, 0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#8888A0'
+              e.currentTarget.style.borderColor = 'rgba(136, 136, 160, 0.15)'
+            }}
+          >
+            Exit ✕
           </button>
         </div>
       </div>
 
-      {/* Chat Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-none">
-        {/* Step 0-1: Greeting */}
-        {(step >= 0) && (
+      {/* ===== Chat Messages ===== */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-none"
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        {/* --- GREETING (step 0+) --- */}
+        {step >= 0 && (
+          <RoamieBubble delay={0.15}>
+            Hey! Where are you thinking of going?
+          </RoamieBubble>
+        )}
+
+        {/* --- QUICK REPLY CHIPS (step 0) --- */}
+        {step === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-wrap gap-2 pt-1 pb-2"
+          >
+            {quickReplies.map((reply, i) => (
+              <QuickReplyChip
+                key={reply.key}
+                label={reply.label}
+                index={i}
+                onClick={() => handleChipClick(reply.key)}
+              />
+            ))}
+          </motion.div>
+        )}
+
+        {/* --- USER MESSAGE (step 1+) --- */}
+        {step >= 1 && selectedKey && (
+          <UserBubble delay={0.1}>
+            {userMessage}
+          </UserBubble>
+        )}
+
+        {/* --- TYPING INDICATOR (step 1) --- */}
+        {step === 1 && <TypingDots />}
+
+        {/* --- MOOD INTRO (step 2+) --- */}
+        {step >= 2 && selectedKey && (
           <>
-            <RoamieBubble delay={0.2}>
-              <p className="font-handwritten text-base gradient-text font-medium">
-                Where are you thinking? 🌍
-              </p>
+            <RoamieBubble delay={0.1}>
+              <span>
+                Ooh, {destData[selectedKey].name} in {destData[selectedKey].month}!{' '}
+                {destData[selectedKey].emoji} Before I build your trip — swipe through these
+                and heart the ones that match your vibe.
+              </span>
             </RoamieBubble>
 
-            {/* Destination input bubble */}
-            {step >= 1 && (
-              <UserBubble delay={0.3}>
-                {step === 1 ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleDestinationSubmit()}
-                      placeholder="Type a destination..."
-                      className="w-full bg-transparent text-sm text-white placeholder-white/40 font-body outline-none"
-                      autoFocus
-                      style={{ fontFamily: "'Caveat', cursive", fontSize: '16px', minWidth: '140px' }}
+            {/* Horizontal scroll of mood images */}
+            {showMoodImages && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none px-0.5 -mx-0.5">
+                  {moodImagesByDest[selectedKey].map((src, i) => (
+                    <MoodImageCard
+                      key={i}
+                      src={src}
+                      liked={likedMoods.includes(i)}
+                      onToggle={() => handleMoodToggle(i)}
+                      index={i}
                     />
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={handleDestinationSubmit}
-                      className="flex-shrink-0"
-                      disabled={!destination.trim()}
-                      style={{ opacity: destination.trim() ? 1 : 0.4 }}
-                    >
-                      <ArrowRight size={18} strokeWidth={2.5} />
-                    </motion.button>
-                  </div>
-                ) : (
-                  <span style={{ fontFamily: "'Caveat', cursive", fontSize: '16px' }}>{destination} ✨</span>
-                )}
-              </UserBubble>
+                  ))}
+                </div>
+                <p
+                  className="text-[10px] font-body text-center mt-1 tracking-wide"
+                  style={{ color: 'rgba(136, 136, 160, 0.6)' }}
+                >
+                  {likedMoods.length === 0 ? 'Tap one to heart it ✨' : ''}
+                </p>
+              </motion.div>
             )}
           </>
         )}
 
-        {/* Step 2: Preferences */}
-        {step >= 2 && (
+        {/* --- CONFIRMATION & LOADING (step 3) --- */}
+        {step === 3 && selectedKey && (
           <>
-            <RoamieBubble delay={0.2}>
-              <div>
-                <p className="font-handwritten text-sm gradient-text font-medium">
-                  Ooh {destination}! Great pick! 🎉
-                </p>
-                <p className="font-body text-xs text-text-secondary mt-1">
-                  What kind of trip are we talking?
-                </p>
-              </div>
+            <RoamieBubble delay={0.1}>
+              <span>
+                Got it — {destData[selectedKey].moodDesc}. Give me 30 seconds...
+              </span>
             </RoamieBubble>
 
-            {showChips && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-wrap gap-2"
-              >
-                <PinChip label="Budget Friendly" icon={IndianRupee} selected={selectedPrefs.includes('budget')} onClick={() => togglePref('budget')} />
-                <PinChip label="Moderate" icon={Clock} selected={selectedPrefs.includes('moderate')} onClick={() => togglePref('moderate')} />
-                <PinChip label="Luxury" icon={Star} selected={selectedPrefs.includes('luxury')} onClick={() => togglePref('luxury')} />
-                <PinChip label="3 Days" icon={Calendar} selected={selectedPrefs.includes('3days')} onClick={() => togglePref('3days')} />
-                <PinChip label="5 Days" icon={Calendar} selected={selectedPrefs.includes('5days')} onClick={() => togglePref('5days')} />
-                <PinChip label="7 Days" icon={Calendar} selected={selectedPrefs.includes('7days')} onClick={() => togglePref('7days')} />
-                <PinChip label="Adventure" icon={Mountain} selected={selectedPrefs.includes('adventure')} onClick={() => togglePref('adventure')} />
-                <PinChip label="Relaxation" icon={Umbrella} selected={selectedPrefs.includes('relax')} onClick={() => togglePref('relax')} />
-                <PinChip label="Nightlife" icon={Moon} selected={selectedPrefs.includes('nightlife')} onClick={() => togglePref('nightlife')} />
-              </motion.div>
-            )}
-
-            {selectedPrefs.length > 0 && (
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handlePrefsDone}
-                className="self-end flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-display font-semibold text-white"
-                style={{
-                  background: 'linear-gradient(135deg, #00D4C4, #2A6BFF)',
-                  boxShadow: '0 0 15px rgba(0, 212, 196, 0.2)',
-                }}
-              >
-                Got it!
-                <ArrowRight size={14} strokeWidth={2.5} />
-              </motion.button>
-            )}
+            {/* Loading compass card */}
+            <LoadingCompass />
           </>
         )}
 
-        {/* Step 3: Mood Board */}
-        {step >= 3 && (
+        {/* --- REVEAL (step 4) --- */}
+        {step >= 4 && selectedKey && showReveal && (
           <>
-            <RoamieBubble delay={0.2}>
-              <p className="font-handwritten text-sm gradient-text font-medium">
-                Love the choices! Now show me what speaks to your soul ✨
-              </p>
-              <p className="font-body text-xs text-text-secondary mt-1">Tap the ones that give you wanderlust</p>
+            <RoamieBubble delay={0.1}>
+              <span>
+                Your adventure is ready! 🎉 Here's your custom {destData[selectedKey].name} itinerary.
+              </span>
             </RoamieBubble>
 
-            <div className="grid grid-cols-2 gap-2.5 max-w-sm">
-              {moodImages.map((m, i) => (
-                <MoodCard key={i} {...m} index={i} liked={likedMoods.includes(i)} onToggle={() => toggleMood(i)} />
-              ))}
-            </div>
+            <TripRevealCard destKey={selectedKey} onViewPlan={handleViewPlan} />
 
-            {likedMoods.length > 0 && (
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleMoodDone}
-                className="self-end flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-display font-semibold text-white"
-                style={{
-                  background: 'linear-gradient(135deg, #00D4C4, #2A6BFF)',
-                  boxShadow: '0 0 15px rgba(0, 212, 196, 0.2)',
-                }}
-              >
-                Build my trip!
-                <Compass size={14} strokeWidth={2.5} />
-              </motion.button>
-            )}
-          </>
-        )}
-
-        {/* Step 4: Generating */}
-        {step >= 4 && (
-          <>
-            {isGenerating && (
-              <>
-                <RoamieBubble delay={0.1}>
-                  <p className="font-handwritten text-sm gradient-text">Give me a sec... I'm weaving magic for you 🪄</p>
-                </RoamieBubble>
-                <TypingDots />
-                {/* Spinning compass */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-center py-4"
-                >
-                  <div className="relative">
-                    <div className="absolute inset-0 animate-pulse-glow rounded-full"
-                      style={{ transform: 'scale(1.3)' }} />
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Compass size={40} strokeWidth={1.5} className="text-brand-cyan"
-                        style={{ filter: 'drop-shadow(0 0 15px rgba(0, 212, 196, 0.3))' }} />
-                    </motion.div>
-                  </div>
-                </motion.div>
-              </>
-            )}
-
-            {/* Step 5: Reveal */}
-            {showReveal && (
+            {/* Saved confirmation */}
+            {isSaved && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                transition={{ delay: 0.5 }}
+                className="text-center pb-2"
               >
-                <RoamieBubble delay={0.1}>
-                  <p className="font-handwritten text-base gradient-text font-medium mb-1">
-                    Your {destination} adventure awaits! 🎉
-                  </p>
-                  <p className="text-[10px] font-body text-text-secondary">Here's your custom itinerary</p>
-                </RoamieBubble>
-
-                {/* Itinerary on notebook paper */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }}
-                >
-                  <NotebookPaper>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-handwritten text-base gradient-text font-medium">{destination} Itinerary</h3>
-                      <span className="font-handwritten text-xs gradient-text">Day 1</span>
-                    </div>
-                    {itineraryData.map((item, i) => (
-                      <ItineraryItem key={i} {...item} isLast={i === itineraryData.length - 1} />
-                    ))}
-                  </NotebookPaper>
-                </motion.div>
-
-                {/* Step 6: Refinement checkbox */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-3 flex items-center justify-center"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleRefinement}
-                    className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-card-bg border border-brand-cyan/20 shadow-[0_2px_10px_rgba(0,0,0,0.2)]"
-                  >
-                    <div className="w-5 h-5 rounded-sm flex items-center justify-center"
-                      style={{
-                        border: checked ? 'none' : '1.5px solid rgba(0, 212, 196, 0.4)',
-                        background: checked ? 'linear-gradient(135deg, #00D4C4, #2A6BFF)' : 'transparent',
-                      }}>
-                      {checked && (
-                        <motion.svg
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{ duration: 0.3 }}
-                          width="14" height="14" viewBox="0 0 24 24" fill="none"
-                          stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 6L9 17l-5-5" />
-                        </motion.svg>
-                      )}
-                    </div>
-                    <span className="text-xs font-display font-semibold text-text-primary tracking-wide">
-                      Looks great!
-                    </span>
-                  </motion.button>
-                </motion.div>
-              </motion.div>
-            )}
-
-            {/* Completion */}
-            {step === 6 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-3"
-              >
-                <RoamieBubble delay={0.1}>
-                  <p className="font-handwritten text-sm gradient-text">
-                    Amazing! Your trip is saved. Ready to explore more? 🎒
-                  </p>
-                </RoamieBubble>
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/trips')}
-                  className="mt-3 px-6 py-2.5 rounded-full text-xs font-display font-semibold text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
-                    boxShadow: '0 0 20px rgba(0, 212, 196, 0.3), 0 4px 15px rgba(0,0,0,0.3)',
-                  }}
-                >
-                  View My Trips
-                </motion.button>
+                <p className="font-handwritten text-xs" style={{ color: 'rgba(0, 212, 196, 0.5)' }}>
+                  ✦ Trip saved to your collection ✦
+                </p>
               </motion.div>
             )}
           </>
         )}
+      </div>
+
+      {/* ===== Input Bar (Fixed at bottom) ===== */}
+      <div
+        className="flex-shrink-0 z-20 px-3 pb-3 pt-2"
+        style={{
+          background: 'rgba(10, 10, 18, 0.85)',
+          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid rgba(42, 42, 62, 0.3)',
+        }}
+      >
+        <div
+          className="relative flex items-center gap-2 rounded-full px-4 py-2.5"
+          style={{
+            background: 'rgba(20, 20, 31, 0.9)',
+            border: '1px solid rgba(0, 212, 196, 0.08)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.02)',
+          }}
+        >
+          {/* Mic icon */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="flex-shrink-0 p-1 rounded-full transition-colors duration-200"
+            style={{ color: 'rgba(136, 136, 160, 0.6)' }}
+            whileHover={{ color: '#00D4C4' }}
+          >
+            <Mic size={16} strokeWidth={1.8} />
+          </motion.button>
+
+          {/* Input field */}
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleInputSend()}
+              placeholder="Type a message..."
+              className="w-full bg-transparent text-sm text-text-primary placeholder-text-secondary/50 font-body outline-none"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            />
+            {/* Faint glowing blue underline */}
+            <div
+              className="absolute bottom-0 left-0 right-0 h-[1px] transition-opacity duration-300"
+              style={{
+                background: inputText.trim()
+                  ? 'linear-gradient(90deg, transparent, #00D4C4, transparent)'
+                  : 'linear-gradient(90deg, transparent, rgba(0, 212, 196, 0.1), transparent)',
+                opacity: inputText.trim() ? 0.8 : 0.3,
+                boxShadow: inputText.trim()
+                  ? '0 0 8px rgba(0, 212, 196, 0.3)'
+                  : 'none',
+              }}
+            />
+          </div>
+
+          {/* Send button */}
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleInputSend}
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+            style={{
+              background: inputText.trim()
+                ? 'linear-gradient(135deg, #00D4C4, #2A6BFF)'
+                : 'rgba(42, 42, 62, 0.5)',
+              boxShadow: inputText.trim()
+                ? '0 0 16px rgba(0, 212, 196, 0.25), 0 2px 8px rgba(0,0,0,0.2)'
+                : 'none',
+            }}
+          >
+            <Send
+              size={14}
+              strokeWidth={2.5}
+              style={{
+                color: inputText.trim() ? '#0A0A12' : 'rgba(136, 136, 160, 0.4)',
+                transition: 'color 0.3s ease',
+              }}
+            />
+          </motion.button>
+        </div>
       </div>
     </div>
   )

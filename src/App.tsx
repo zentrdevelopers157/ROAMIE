@@ -12,7 +12,7 @@ import Auth from './pages/Auth'
 
 export default function App() {
   const location = useLocation()
-  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth'
+  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth' || location.pathname === '/plan'
 
   return (
     <div className="relative min-h-screen bg-base-bg">
