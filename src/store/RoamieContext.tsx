@@ -7,12 +7,26 @@ export interface ItineraryItem {
   description: string
 }
 
+/* Raw AI day data for preserving day-grouped itineraries */
+export interface RawActivity {
+  time: string
+  name: string
+  type: 'food' | 'stay' | 'activity' | 'transport'
+  cost: number
+}
+
+export interface RawDay {
+  day: number
+  activities: RawActivity[]
+}
+
 export interface SavedTrip {
   id: string
   destination: string
   preferences: string[]
   likedMoods: number[]
   itinerary: ItineraryItem[]
+  rawDays?: RawDay[]
   createdAt: string
 }
 

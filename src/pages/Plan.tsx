@@ -736,6 +736,7 @@ export default function Plan() {
   const [aiError, setAiError] = useState(false)
   const [aiResult, setAiResult] = useState<AITripResponse | null>(null)
   const [bookingSheet, setBookingSheet] = useState<{ destination: string; type: string } | null>(null)
+  const [currentTripId, setCurrentTripId] = useState<string | null>(null)
 
   /* ---- Effects ---- */
   const scrollToBottom = () => {
@@ -795,7 +796,10 @@ export default function Plan() {
             setStep(4)
             setIsSaved(true)
 
-            // Save trip to context
+            // Save trip to context with raw days
+            const tripId = generateId()
+            setCurrentTripId(tripId)
+
             const itinerary: ItineraryItem[] = result.itinerary.flatMap((day) =>
               day.activities.map((a) => ({
                 time: a.time,
@@ -807,11 +811,12 @@ export default function Plan() {
             dispatch({
               type: 'ADD_TRIP',
               payload: {
-                id: generateId(),
+                id: tripId,
                 destination: result.destination,
                 preferences: [selectedKey!],
                 likedMoods: [i],
                 itinerary,
+                rawDays: result.itinerary,
                 createdAt: new Date().toISOString(),
               },
             })
@@ -829,7 +834,11 @@ export default function Plan() {
   }
 
   const handleViewPlan = () => {
-    navigate('/trips')
+    if (currentTripId) {
+      navigate(`/itinerary/${currentTripId}`)
+    } else {
+      navigate('/trips')
+    }
   }
 
   const handleInputSend = () => {

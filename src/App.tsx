@@ -6,13 +6,14 @@ import Onboarding from './pages/Onboarding'
 import Home from './pages/Home'
 import Trips from './pages/Trips'
 import Plan from './pages/Plan'
+import Itinerary from './pages/Itinerary'
 import Feed from './pages/Feed'
 import Profile from './pages/Profile'
 import Auth from './pages/Auth'
 
 export default function App() {
   const location = useLocation()
-  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth' || location.pathname === '/plan'
+  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth' || location.pathname === '/plan' || location.pathname.startsWith('/itinerary')
 
   return (
     <div className="relative min-h-screen bg-base-bg">
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/feed" element={<Feed />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/itinerary/:tripId" element={<Itinerary />} />
         </Routes>
       </main>
 
