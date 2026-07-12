@@ -37,6 +37,7 @@ export interface RoamieState {
   socialLevel: number
   trips: SavedTrip[]
   onboarded: boolean
+  roamCoins: number
 }
 
 type Action =
@@ -48,6 +49,7 @@ type Action =
   | { type: 'ADD_TRIP'; payload: SavedTrip }
   | { type: 'REMOVE_TRIP'; payload: string }
   | { type: 'LOAD_STATE'; payload: RoamieState }
+  | { type: 'ADD_COINS'; payload: number }
 
 /* ===== INITIAL STATE ===== */
 const initialState: RoamieState = {
@@ -57,6 +59,7 @@ const initialState: RoamieState = {
   socialLevel: 6,
   trips: [],
   onboarded: false,
+  roamCoins: 100,
 }
 
 /* ===== REDUCER ===== */
@@ -76,6 +79,8 @@ function roamieReducer(state: RoamieState, action: Action): RoamieState {
       return { ...state, trips: [action.payload, ...state.trips] }
     case 'REMOVE_TRIP':
       return { ...state, trips: state.trips.filter(t => t.id !== action.payload) }
+    case 'ADD_COINS':
+      return { ...state, roamCoins: (state.roamCoins ?? 100) + action.payload }
     case 'LOAD_STATE':
       return { ...action.payload }
     default:

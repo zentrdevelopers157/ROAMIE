@@ -10,10 +10,11 @@ import Itinerary from './pages/Itinerary'
 import Feed from './pages/Feed'
 import Profile from './pages/Profile'
 import Auth from './pages/Auth'
+import ProPaywall from './pages/ProPaywall'
 
 export default function App() {
   const location = useLocation()
-  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth' || location.pathname === '/plan' || location.pathname.startsWith('/itinerary')
+  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/auth' || location.pathname === '/plan' || location.pathname.startsWith('/itinerary') || location.pathname === '/pro'
 
   return (
     <div className="relative min-h-screen bg-base-bg">
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/itinerary/:tripId" element={<Itinerary />} />
+          <Route path="/pro" element={<ProPaywall />} />
         </Routes>
       </main>
 

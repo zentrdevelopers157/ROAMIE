@@ -152,6 +152,30 @@ export interface CommunityPost {
   created_at: string
 }
 
+export async function createPost(post: {
+  user_id: string
+  user_name: string
+  user_avatar: string
+  location: string
+  image_url: string
+  caption: string
+  tags: string
+}) {
+  if (!isSupabaseEnabled()) return null
+
+  const { data, error } = await supabase!
+    .from('community_posts')
+    .insert(post)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating post:', error)
+    return null
+  }
+  return data
+}
+
 export async function getCommunityPosts() {
   if (!isSupabaseEnabled()) return []
 

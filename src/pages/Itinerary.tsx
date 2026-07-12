@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Compass } from 'lucide-react'
+import { ArrowLeft, Compass, Share2, X, CheckCircle } from 'lucide-react'
 import { useRoamie } from '../store/RoamieContext'
 import type { SavedTrip, RawDay } from '../store/RoamieContext'
+import { createPost } from '../lib/db'
+import { useAuth } from '../store/AuthContext'
 import TripMap from '../components/TripMap'
 import type { MapActivity } from '../components/TripMap'
+import PolaroidCard from '../components/PolaroidCard'
+import WashiTape from '../components/WashiTape'
 
 /* ===== SPRINGS ===== */
 /* ===== TOPOGRAPHIC BG (matches Plan page) ===== */
@@ -194,7 +198,8 @@ function DaySection({ day, activities }: { day: number; activities: RawDay['acti
 export default function Itinerary() {
   const { tripId } = useParams<{ tripId: string }>()
   const navigate = useNavigate()
-  const { state } = useRoamie()
+  const { state, dispatch } = useRoamie()
+  const { user } = useAuth()
 
   // Find trip from context
   const trip: SavedTrip | undefined = state.trips.find((t) => t.id === tripId)
@@ -202,6 +207,8 @@ export default function Itinerary() {
   // State
   const [selectedDay, setSelectedDay] = useState<number | 'all'>(1)
   const [viewMode, setViewMode] = useState<'timeline' | 'map'>('timeline')
+  const [showMemoryModal, setShowMemoryModal] = useState(false)
+  const [tripCompleted, setTripCompleted] = useState(false)
 
   if (!trip) {
     return (
@@ -331,6 +338,33 @@ export default function Itinerary() {
             style={{ backgroundImage: `url(${heroImage})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0A12]" />
+
+          {/* Mark Trip Complete button */}
+          <div className="absolute bottom-3 right-4 z-10">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setShowMemoryModal(true)
+                if (!tripCompleted) {
+                  setTripCompleted(true)
+                  dispatch({ type: 'ADD_COINS', payload: 500 })
+                }
+              }}
+              className="text-[9px] font-display font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-full transition-all duration-200 flex items-center gap-1"
+              style={{
+                background: tripCompleted
+                  ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                  : 'rgba(20, 20, 31, 0.85)',
+                color: tripCompleted ? 'white' : '#F0F0F5',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(8px)',
+                boxShadow: tripCompleted ? '0 0 15px rgba(34, 197, 94, 0.3)' : 'none',
+              }}
+            >
+              {tripCompleted ? '✅ Completed' : '✅ Mark Complete'}
+            </motion.button>
+          </div>
 
           {/* View toggle overlay */}
           <div className="absolute bottom-3 left-4 z-10 flex items-center gap-1.5">
@@ -471,7 +505,188 @@ export default function Itinerary() {
           )}
         </div>
       </div>
+
+      {/* ===== Memory Reveal Modal ===== */}
+      {showMemoryModal && (
+        <MemoryRevealModal
+          trip={trip}
+          onClose={() => setShowMemoryModal(false)}
+          user={user}
+          userName={state.name}
+        />
+      )}
     </div>
+  )
+}
+
+/* ===== MEMORY REVEAL MODAL ===== */
+function MemoryRevealModal({
+  trip,
+  onClose,
+  user,
+  userName,
+}: {
+  trip: SavedTrip
+  onClose: () => void
+  user: { id?: string } | null
+  userName: string
+}) {
+  const [sharedToFeed, setSharedToFeed] = useState(false)
+
+  // Compute stats
+  const dayCount = trip.rawDays?.length ?? 1
+  const totalCost = trip.rawDays
+    ? trip.rawDays.reduce((sum, d) => sum + d.activities.reduce((s, a) => s + a.cost, 0), 0)
+    : 0
+  const activitiesCount = trip.rawDays
+    ? trip.rawDays.reduce((sum, d) => sum + d.activities.length, 0)
+    : trip.itinerary.length
+
+  const handleShareWhatsApp = () => {
+    const text = encodeURIComponent(
+      `My ${trip.destination} Trip 🎉\nDays: ${dayCount} | Activities: ${activitiesCount} | Spent: ₹${totalCost.toLocaleString('en-IN')}\n\nPlanned by ROAMIE ✨\n\nPlan your own adventure at roamie.app!`
+    )
+    window.open(`https://wa.me/?text=${text}`, '_blank')
+  }
+
+  const handleShareToFeed = async () => {
+    if (!user?.id) return
+
+    const result = await createPost({
+      user_id: user.id,
+      user_name: userName || 'Traveler',
+      user_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=85&fm=webp',
+      location: trip.destination,
+      image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp',
+      caption: `Just completed my ${trip.destination} trip! ${dayCount} days, ${activitiesCount} activities, ₹${totalCost.toLocaleString('en-IN')} well spent. Planned by ROAMIE ✨`,
+      tags: `#${trip.destination.replace(/\s+/g, '')} #roamie #travel`,
+    })
+
+    if (result) {
+      setSharedToFeed(true)
+      setTimeout(() => setSharedToFeed(false), 3000)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(10, 10, 18, 0.95)' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm relative"
+      >
+        {/* Corner WashiTape decorations */}
+        <WashiTape color="purple" rotate={-3} className="-top-3 -left-2" size="sm" />
+        <WashiTape color="cyan" rotate={3} className="-top-3 -right-2" size="sm" />
+        <WashiTape color="cyan" rotate={-2} className="-bottom-3 -left-2" size="sm" />
+        <WashiTape color="purple" rotate={2} className="-bottom-3 -right-2" size="sm" />
+
+        <PolaroidCard rotate={0.5} className="w-full">
+          {/* Close button */}
+          <div className="flex justify-end px-1 pt-1 pb-0">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="h-7 w-7 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(0,0,0,0.05)' }}
+              aria-label="Close"
+            >
+              <X size={14} strokeWidth={2} className="text-text-secondary/60" />
+            </motion.button>
+          </div>
+
+          {/* Trip Scorecard */}
+          <div className="px-3 pb-4 pt-1 text-center">
+            {/* Destination */}
+            <h2 className="font-handwritten text-xl gradient-text font-medium">
+              My {trip.destination} Trip
+            </h2>
+
+            <div className="w-12 h-[1px] mx-auto my-3" style={{
+              background: 'linear-gradient(90deg, transparent, #00D4C4, transparent)',
+            }} />
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <p className="font-handwritten text-lg gradient-text font-medium">{dayCount}</p>
+                <p className="text-[9px] font-body uppercase tracking-wider" style={{ color: '#8888A0' }}>
+                  Days
+                </p>
+              </div>
+              <div>
+                <p className="font-handwritten text-lg gradient-text font-medium">
+                  ₹{totalCost.toLocaleString('en-IN')}
+                </p>
+                <p className="text-[9px] font-body uppercase tracking-wider" style={{ color: '#8888A0' }}>
+                  Spent
+                </p>
+              </div>
+              <div>
+                <p className="font-handwritten text-lg gradient-text font-medium">{activitiesCount}</p>
+                <p className="text-[9px] font-body uppercase tracking-wider" style={{ color: '#8888A0' }}>
+                  Activities
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <p className="font-handwritten text-sm gradient-text mt-2">
+              Planned by ROAMIE ✨
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="px-3 pb-3 space-y-2">
+            {/* Share to WhatsApp */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleShareWhatsApp}
+              className="w-full py-2.5 rounded-full text-xs font-display font-semibold text-white tracking-wider flex items-center justify-center gap-2"
+              style={{
+                background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
+                backgroundSize: '200% 200%',
+                boxShadow: '0 0 20px rgba(0, 212, 196, 0.2), 0 4px 12px rgba(0,0,0,0.3)',
+              }}
+            >
+              <Share2 size={14} strokeWidth={2.5} />
+              Share to WhatsApp
+            </motion.button>
+
+            {/* Share to ROAMIE Feed */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleShareToFeed}
+              className="w-full py-2.5 rounded-full text-xs font-display font-semibold tracking-wider flex items-center justify-center gap-2 transition-all duration-200"
+              style={{
+                background: sharedToFeed
+                  ? 'rgba(34, 197, 94, 0.15)'
+                  : 'rgba(0, 212, 196, 0.06)',
+                border: `1px solid ${sharedToFeed ? 'rgba(34, 197, 94, 0.3)' : 'rgba(0, 212, 196, 0.2)'}`,
+                color: sharedToFeed ? '#22C55E' : '#00D4C4',
+              }}
+            >
+              {sharedToFeed ? (
+                <><CheckCircle size={14} strokeWidth={2.5} /> Shared to Feed!</>
+              ) : (
+                <><Compass size={14} strokeWidth={2.5} /> Share to ROAMIE Feed</>
+              )}
+            </motion.button>
+          </div>
+        </PolaroidCard>
+      </motion.div>
+    </motion.div>
   )
 }
 

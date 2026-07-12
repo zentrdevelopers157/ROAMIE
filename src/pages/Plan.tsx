@@ -821,6 +821,9 @@ export default function Plan() {
               },
             })
 
+            // Reward for planning
+            dispatch({ type: 'ADD_COINS', payload: 50 })
+
             setTimeout(() => setShowReveal(true), 250)
             scrollToBottom()
           })

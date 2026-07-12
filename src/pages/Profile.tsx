@@ -202,6 +202,7 @@ export default function Profile() {
             <SettingRow icon={User} label="Edit Profile" description="Name, avatar, travel vibe" />
             <SettingRow icon={Bell} label="Notifications" description="Trip alerts, community updates" />
             <SettingRow icon={Globe} label="Language" description="English (US)" />
+            <SettingRow icon={Star} label="✨ Roamie Pro" description="Unlock premium features" onClick={() => navigate('/pro')} />
             <SettingRow icon={Star} label="Rate ROAMIE" description="Share your feedback" />
             <SettingRow icon={LogOut} label="Reset Onboarding" description="Start fresh with ROAMIE" onClick={() => {
               localStorage.removeItem('roamie_state')

@@ -9,6 +9,7 @@ import {
   User,
   type LucideIcon,
 } from 'lucide-react'
+import { useRoamie } from '../store/RoamieContext'
 
 interface NavItem {
   path: string
@@ -29,6 +30,7 @@ export default function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const [hoveredPath, setHoveredPath] = useState<string | null>(null)
+  const { state } = useRoamie()
 
   const handleNavigate = (path: string) => {
     navigate(path)
@@ -39,8 +41,18 @@ export default function BottomNav() {
       {/* Background with glass effect */}
       <div className="absolute inset-0 bg-[#14141F]/90 backdrop-blur-xl border-t border-[#2A2A3E]/60" />
 
+      {/* RoamCoin indicator */}
+      <div className="relative flex items-center justify-center pt-1.5 pb-0.5">
+        <span
+          className="font-handwritten text-xs"
+          style={{ color: '#FFD23F' }}
+        >
+          🪙 {(state.roamCoins ?? 100).toLocaleString()}
+        </span>
+      </div>
+
       {/* Navigation items */}
-      <div className="relative flex items-center justify-around px-2 pb-[calc(env(safe-area-inset-bottom,8px)+4px)] pt-3">
+      <div className="relative flex items-center justify-around px-2 pb-[calc(env(safe-area-inset-bottom,8px)+4px)] pt-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           const isHovered = hoveredPath === item.path

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Heart,
@@ -9,14 +9,16 @@ import {
   MapPin,
 } from 'lucide-react'
 import PolaroidCard from '../components/PolaroidCard'
+import { getCommunityPosts } from '../lib/db'
+import { useAuth } from '../store/AuthContext'
 
 /* ===== SPRING ===== */
 const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
 
-/* ===== FEED POST DATA ===== */
-const feedPosts = [
+/* ===== MOCK FALLBACK POSTS (used when Supabase is not configured) ===== */
+const mockPosts = [
   {
-    id: 1,
+    id: '1',
     user: { name: 'Priya Sharma', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=85&fm=webp' },
     location: 'Goa, India',
     image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=900&q=85&fm=webp',
@@ -27,7 +29,7 @@ const feedPosts = [
     tags: '#beachlife #goa #wanderlust',
   },
   {
-    id: 2,
+    id: '2',
     user: { name: 'Arjun Mehta', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=85&fm=webp' },
     location: 'Manali, India',
     image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=900&q=85&fm=webp',
@@ -38,7 +40,7 @@ const feedPosts = [
     tags: '#mountains #manali #adventure',
   },
   {
-    id: 3,
+    id: '3',
     user: { name: 'Ananya Patel', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=85&fm=webp' },
     location: 'Kerala, India',
     image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=900&q=85&fm=webp',
@@ -49,7 +51,7 @@ const feedPosts = [
     tags: '#kerala #backwaters #nature',
   },
   {
-    id: 4,
+    id: '4',
     user: { name: 'Rohan Kapoor', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=85&fm=webp' },
     location: 'Rishikesh, India',
     image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=900&q=85&fm=webp',
@@ -60,7 +62,7 @@ const feedPosts = [
     tags: '#rishikesh #yoga #spiritual',
   },
   {
-    id: 5,
+    id: '5',
     user: { name: 'Zara Sheikh', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=85&fm=webp' },
     location: 'Udaipur, India',
     image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=900&q=85&fm=webp',
@@ -73,7 +75,7 @@ const feedPosts = [
 ]
 
 /* ===== POST COMPONENT ===== */
-function FeedPost({ post, index }: { post: typeof feedPosts[number]; index: number }) {
+function FeedPost({ post, index }: { post: FeedPostData; index: number }) {
   const [liked, setLiked] = useState(false)
   const [saved, setSaved] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
@@ -202,8 +204,62 @@ const stories = [
   { name: 'Zara', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=85&fm=webp' },
 ]
 
+/* ===== POST TYPE (unified for mock + Supabase) ===== */
+interface FeedPostData {
+  id: string
+  user: { name: string; avatar: string }
+  location: string
+  image: string
+  caption: string
+  likes: number
+  comments: number
+  time: string
+  tags: string
+}
+
+/* ===== TIME HELPER ===== */
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
+
 /* ===== MAIN FEED COMPONENT ===== */
 export default function Feed() {
+  const [posts, setPosts] = useState<FeedPostData[]>([])
+  const [loading, setLoading] = useState(true)
+  useAuth() // access auth for future logged-in features
+
+  useEffect(() => {
+    async function fetchPosts() {
+      const dbPosts = await getCommunityPosts()
+      if (dbPosts && dbPosts.length > 0) {
+        setPosts(
+          dbPosts.map((p) => ({
+            id: p.id,
+            user: { name: p.user_name, avatar: p.user_avatar },
+            location: p.location,
+            image: p.image_url,
+            caption: p.caption,
+            likes: p.likes_count,
+            comments: p.comments_count,
+            time: timeAgo(p.created_at),
+            tags: p.tags,
+          })),
+        )
+      } else {
+        // Fallback to mock data if Supabase not configured or no posts yet
+        setPosts(mockPosts)
+      }
+      setLoading(false)
+    }
+    fetchPosts()
+  }, [])
+
   return (
     <div className="px-4 pt-5 pb-6">
       {/* Header */}
@@ -261,9 +317,21 @@ export default function Feed() {
 
       {/* Feed Posts */}
       <div className="space-y-2 mt-1">
-        {feedPosts.map((post, i) => (
-          <FeedPost key={post.id} post={post} index={i} />
-        ))}
+        {loading ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <p className="font-handwritten text-sm" style={{ color: 'rgba(0, 212, 196, 0.4)' }}>
+              Loading stories... 🌍
+            </p>
+          </motion.div>
+        ) : (
+          posts.map((post, i) => (
+            <FeedPost key={post.id} post={post} index={i} />
+          ))
+        )}
       </div>
     </div>
   )
