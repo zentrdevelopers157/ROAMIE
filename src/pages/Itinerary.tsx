@@ -212,18 +212,28 @@ export default function Itinerary() {
 
   if (!trip) {
     return (
-      <div className="relative h-dvh flex flex-col items-center justify-center" style={topoBg}>
-        <p className="font-handwritten text-lg gradient-text">Trip not found 🗺️</p>
-        <button
+      <div className="relative h-dvh flex flex-col items-center justify-center px-6" style={topoBg}>
+        <StickyNote rotate={0.5}>
+          <div className="text-center px-2">
+            <span className="text-3xl block mb-2">🗺️</span>
+            <p className="font-handwritten text-lg gradient-text">Trip not found</p>
+            <p className="font-handwritten text-xs gradient-text mt-1">
+              This journey doesn't exist yet...
+            </p>
+          </div>
+        </StickyNote>
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/trips')}
-          className="mt-4 px-5 py-2 rounded-full text-xs font-display font-semibold text-white"
+          className="mt-6 px-6 py-2.5 rounded-full text-xs font-display font-semibold text-white"
           style={{
             background: 'linear-gradient(135deg, #00D4C4, #2A6BFF)',
             boxShadow: '0 0 15px rgba(0, 212, 196, 0.2)',
           }}
         >
           Back to Trips
-        </button>
+        </motion.button>
       </div>
     )
   }
@@ -265,8 +275,8 @@ export default function Itinerary() {
     })
   })()
 
-  // Destination header image
-  const heroImage = `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=60&fm=webp`
+  // Dynamic destination image from Unsplash
+  const heroImage = `https://source.unsplash.com/800x600/?${encodeURIComponent(trip.destination)}`
 
   return (
     <div className="relative h-dvh flex flex-col" style={topoBg}>

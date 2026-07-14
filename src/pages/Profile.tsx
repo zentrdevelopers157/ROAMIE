@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -142,8 +142,55 @@ export default function Profile() {
   const tripCount = state.trips.length
   const vibeCount = state.selectedVibes.length
 
+  // Generate recent activity items
+  const recentActivity = useMemo(() => {
+    const activities: { emoji: string; text: string; time: string }[] = []
+
+    if (state.onboarded) {
+      activities.push({
+        emoji: '🎒',
+        text: 'Completed onboarding',
+        time: 'Just now',
+      })
+    }
+
+    state.trips.slice(0, 5).forEach((trip) => {
+      activities.push({
+        emoji: '✈️',
+        text: `Planned trip to ${trip.destination}`,
+        time: new Date(trip.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      })
+    })
+
+    state.confirmedBookings.forEach((booking) => {
+      activities.push({
+        emoji: '✅',
+        text: `Booked ${booking.destination} trip`,
+        time: new Date(booking.paidAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+      })
+    })
+
+    if (state.roamCoins > 100) {
+      activities.push({
+        emoji: '🪙',
+        text: `Earned ${state.roamCoins - 100} RoamCoins`,
+        time: 'Recently',
+      })
+    }
+
+    return activities
+  }, [state])
+
   return (
-    <div className="px-4 pt-5 pb-6">
+    <div className="px-4 pt-5 pb-6" style={{ perspective: '800px' }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -163,13 +210,13 @@ export default function Profile() {
         </motion.button>
       </motion.div>
 
-      {/* Profile Card */}
+      {/* Profile Card with 3D */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
       >
-        <PolaroidCard rotate={1} className="w-full mb-6">
+        <PolaroidCard rotate={1} enable3DTilt className="w-full mb-6">
           <div className="flex flex-col items-center px-2 py-3">
             {/* Avatar */}
             <div className="relative mb-3">
@@ -246,13 +293,14 @@ export default function Profile() {
         </PolaroidCard>
       </motion.div>
 
-      {/* Stats */}
+      {/* Toggle between Stats & Settings */}
       {showSettings ? (
         /* Settings Panel */
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 10, rotateX: -5 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
           transition={springGentle}
+          style={{ perspective: '600px' }}
         >
           <h3 className="text-[10px] font-display font-semibold text-text-secondary uppercase tracking-widest mb-2 px-1">
             Settings
@@ -272,7 +320,7 @@ export default function Profile() {
           </div>
         </motion.div>
       ) : (
-        /* Stats Panel */
+        /* Stats Panel + Recent Activity */
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -287,16 +335,68 @@ export default function Profile() {
             <StatCard icon={Camera} label="Memories" value={tripCount * 3 || '—'} />
           </div>
 
-          {/* Recent Trips */}
+          {/* Recent Activity */}
           <h3 className="text-[10px] font-display font-semibold text-text-secondary uppercase tracking-widest mb-3 px-1">
+            Recent Activity
+          </h3>
+          <div
+            className="relative rounded-sm p-4 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+            style={{
+              background: '#12121E',
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(0, 212, 196, 0.04) 23px, rgba(0, 212, 196, 0.04) 24px)',
+              borderLeft: '2px solid rgba(0, 212, 196, 0.1)',
+            }}
+          >
+            {recentActivity.length > 0 ? (
+              <div className="space-y-0">
+                {recentActivity.map((item, i) => {
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      className="flex items-center gap-3 py-1.5"
+                    >
+                      <span className="text-sm">{item.emoji}</span>
+                      <div className="flex-1">
+                        <p className="text-[12px] font-handwritten" style={{ color: '#D0D0E0' }}>
+                          {item.text}
+                        </p>
+                      </div>
+                      <span className="text-[8px] font-mono" style={{ color: 'rgba(0, 212, 196, 0.4)' }}>
+                        {item.time}
+                      </span>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-4"
+              >
+                <p className="font-handwritten text-sm" style={{ color: 'rgba(0, 212, 196, 0.4)' }}>
+                  No activity yet. Start exploring! 🌍
+                </p>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Recent Trips */}
+          <h3 className="text-[10px] font-display font-semibold text-text-secondary uppercase tracking-widest mb-3 mt-5 px-1">
             Recent Trips
           </h3>
           {state.trips.length > 0 ? (
             <div className="space-y-2">
-              {state.trips.slice(0, 3).map((trip) => (
+              {state.trips.slice(0, 3).map((trip, i) => (
                 <motion.div
                   key={trip.id}
-                  whileHover={{ x: 4 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  whileHover={{ x: 4, scale: 1.01 }}
                   className="flex items-center gap-3 bg-card-bg rounded-lg px-3 py-2.5 border border-[#2A2A3E]/40 cursor-pointer"
                   onClick={() => navigate('/trips')}
                 >
@@ -346,5 +446,3 @@ export default function Profile() {
     </div>
   )
 }
-
-

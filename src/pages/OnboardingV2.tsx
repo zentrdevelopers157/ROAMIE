@@ -303,15 +303,26 @@ export default function OnboardingV2() {
       {showCinematic && !onboardingDone && <CinematicIntro onDone={handleCinematicDone} />}
 
       {/* Skip button */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        onClick={() => navigate('/home')}
-        className="absolute top-4 right-4 z-20 text-[11px] font-display text-text-secondary tracking-wider uppercase hover:text-text-primary transition-colors"
-      >
-        Skip
-      </motion.button>
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          onClick={() => navigate('/home')}
+          className="text-[9px] font-display text-[#555570] underline tracking-wider hover:text-text-primary transition-colors"
+        >
+          Skip Onboarding →
+        </motion.button>
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          onClick={() => navigate('/home')}
+          className="text-[11px] font-display text-text-secondary tracking-wider uppercase hover:text-text-primary transition-colors"
+        >
+          Skip
+        </motion.button>
+      </div>
 
       {/* Step indicator */}
       <div className="mb-6 flex items-center justify-between">

@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Home, Compass } from 'lucide-react'
 import PolaroidCard from '../components/PolaroidCard'
 import StickyNote from '../components/StickyNote'
 import { useRoamie } from '../store/RoamieContext'
 
 /* ===== SPRING ===== */
+const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
+
 /* ===== 50 DESTINATIONS ===== */
 const destinations = [
   "Torres del Paine", "Mount Fitz Roy", "Swiss Alps", "Dolomites", "Mount Fuji",
@@ -24,6 +26,42 @@ const destinations = [
 const SLICE_COUNT = destinations.length
 const SLICE_DEG = 360 / SLICE_COUNT
 
+/* ===== 3D CONFETTI ===== */
+function ConfettiBurst() {
+  const colors = ['#00D4C4', '#2A6BFF', '#8A2BE2', '#FFD23F', '#FF6B6B', '#22C55E']
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 0.5}s`,
+    color: colors[i % colors.length],
+    size: Math.random() * 6 + 4,
+    duration: `${Math.random() * 1.5 + 2}s`,
+    shape: Math.random() > 0.5 ? '50%' : '2px',
+  }))
+
+  return (
+    <>
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="confetti-particle"
+          style={{
+            left: p.left,
+            top: '-10px',
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            background: p.color,
+            borderRadius: p.shape,
+            animationDelay: p.delay,
+            animationDuration: p.duration,
+            boxShadow: `0 0 6px ${p.color}`,
+          }}
+        />
+      ))}
+    </>
+  )
+}
+
 /* ===== SPIN WHEEL ===== */
 export default function SpinWheel() {
   const navigate = useNavigate()
@@ -32,6 +70,7 @@ export default function SpinWheel() {
   const [isSpinning, setIsSpinning] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [showResult, setShowResult] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const canSpin = (state.roamCoins ?? 100) >= 1000000
 
@@ -41,6 +80,7 @@ export default function SpinWheel() {
     setIsSpinning(true)
     setResult(null)
     setShowResult(false)
+    setShowConfetti(false)
 
     // Random spin: 5-10 full rotations + random slice
     const extraRotations = (5 + Math.floor(Math.random() * 5)) * 360
@@ -54,12 +94,16 @@ export default function SpinWheel() {
       setIsSpinning(false)
       setResult(destinations[randomSlice])
       setShowResult(true)
+      setShowConfetti(true)
 
       // Deduct coins for the spin
       dispatch({ type: 'ADD_COINS', payload: -1000000 })
 
       // Reward with trip completion coins
       dispatch({ type: 'ADD_COINS', payload: 1000 })
+
+      // Hide confetti after burst
+      setTimeout(() => setShowConfetti(false), 3000)
     }, 4500)
   }
 
@@ -80,6 +124,8 @@ export default function SpinWheel() {
           filter: 'blur(50px)',
         }}
       />
+
+      {showConfetti && <ConfettiBurst />}
 
       {/* ===== Header ===== */}
       <div
@@ -129,8 +175,8 @@ export default function SpinWheel() {
           </motion.div>
         )}
 
-        {/* ===== Spin Wheel ===== */}
-        <div className="relative mb-4">
+        {/* ===== Spin Wheel with 3D perspective ===== */}
+        <div className="relative mb-4" style={{ perspective: '800px' }}>
           {/* Outer glow */}
           <div
             className="absolute inset-[-20px] rounded-full"
@@ -140,80 +186,149 @@ export default function SpinWheel() {
             }}
           />
 
-          {/* Pointer / Indicator */}
+          {/* Pointer / Indicator with 3D */}
           <div
             className="absolute top-[-12px] left-1/2 z-20"
             style={{ transform: 'translateX(-50%)' }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M12 22L4 4L12 8L20 4L12 22Z" fill="#00D4C4" />
-              <path d="M12 22L4 4L12 8L20 4L12 22Z" stroke="#0A0A12" strokeWidth="1" fillOpacity="0.9" />
-            </svg>
+            <motion.div
+              animate={isSpinning ? { y: [0, -4, 0] } : {}}
+              transition={{ duration: 0.5, repeat: Infinity }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 22L4 4L12 8L20 4L12 22Z" fill="#00D4C4" />
+                <path d="M12 22L4 4L12 8L20 4L12 22Z" stroke="#0A0A12" strokeWidth="1" fillOpacity="0.9" />
+              </svg>
+            </motion.div>
           </div>
 
-          {/* The Wheel */}
-          <div
-            className="relative w-72 h-72 rounded-full overflow-hidden shadow-[0_0_50px_rgba(0,212,196,0.1)]"
+          {/* The Wheel with 3D */}
+          <motion.div
+            className="relative w-72 h-72 rounded-full overflow-hidden shadow-[0_0_50px_rgba(0,212,196,0.1)] preserve-3d"
             style={{
               transform: `rotate(${rotation}deg)`,
               transition: isSpinning
                 ? 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)'
                 : 'none',
             }}
+            whileHover={!isSpinning ? { scale: 1.02 } : {}}
           >
-            {/* Slices */}
-            {destinations.map((dest, i) => {
-              const isDark = i % 2 === 0
-              const angle = i * SLICE_DEG
-              const midAngle = angle + SLICE_DEG / 2
-              return (
-                <div
-                  key={i}
-                  className="absolute top-0 left-0 w-full h-full"
-                  style={{
-                    clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((angle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((angle - 90) * Math.PI / 180)}%, ${50 + 50 * Math.cos((angle + SLICE_DEG - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((angle + SLICE_DEG - 90) * Math.PI / 180)}%)`,
-                    background: isDark ? '#1A1A2E' : '#14141F',
-                  }}
-                >
-                  {/* Text */}
-                  <span
-                    className="absolute text-[7px] font-display font-semibold whitespace-nowrap"
-                    style={{
-                      color: '#8888A0',
-                      transform: `rotate(${midAngle}deg)`,
-                      transformOrigin: '50% 50%',
-                      left: '50%',
-                      top: '15%',
-                      marginLeft: '10px',
-                    }}
-                  >
-                    {dest.slice(0, 14)}
-                  </span>
-                </div>
-              )
-            })}
+            {/* SVG-based slices with proper text rendering */}
+            <svg viewBox="0 0 288 288" className="absolute inset-0 w-full h-full">
+              {destinations.map((dest, i) => {
+                const angle = i * SLICE_DEG
+                const midAngle = angle + SLICE_DEG / 2
+                const isDark = i % 2 === 0
+                const startAngle = (angle - 90) * Math.PI / 180
+                const endAngle = (angle + SLICE_DEG - 90) * Math.PI / 180
+                const cx = 144, cy = 144, r = 144
 
-            {/* Center circle */}
-            <div
-              className="absolute top-1/2 left-1/2 w-16 h-16 rounded-full z-10 flex items-center justify-center cursor-pointer"
+                const x1 = cx + r * Math.cos(startAngle)
+                const y1 = cy + r * Math.sin(startAngle)
+                const x2 = cx + r * Math.cos(endAngle)
+                const y2 = cy + r * Math.sin(endAngle)
+
+                const largeArc = SLICE_DEG > 180 ? 1 : 0
+
+                const path = `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} Z`
+
+                // Position text along the slice
+                const textRadius = r * 0.7
+                const textX = cx + textRadius * Math.cos((angle + SLICE_DEG / 2 - 90) * Math.PI / 180)
+                const textY = cy + textRadius * Math.sin((angle + SLICE_DEG / 2 - 90) * Math.PI / 180)
+
+                // For long names, use a narrower font or dynamically wrap
+                const fontSize = dest.length > 16 ? 5 : dest.length > 12 ? 5.5 : 6
+
+                return (
+                  <g key={i}>
+                    <path
+                      d={path}
+                      fill={isDark ? '#1A1A2E' : '#14141F'}
+                      stroke="rgba(42,42,62,0.3)"
+                      strokeWidth="0.5"
+                    />
+                    <text
+                      x={textX}
+                      y={textY}
+                      fill="#8888A0"
+                      fontSize={fontSize}
+                      fontWeight="600"
+                      fontFamily="'Outfit', sans-serif"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      transform={`rotate(${midAngle}, ${textX}, ${textY})`}
+                      style={{ 
+                        textShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      {dest.length > 18 ? dest.slice(0, 16) + '…' : dest}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
+
+            {/* Center circle with 3D */}
+            <motion.div
+              className="absolute top-1/2 left-1/2 w-16 h-16 rounded-full z-10 flex items-center justify-center cursor-pointer preserve-3d"
               style={{
                 transform: 'translate(-50%, -50%)',
                 background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
                 boxShadow: '0 0 30px rgba(0, 212, 196, 0.3)',
               }}
               onClick={handleSpin}
+              whileHover={!isSpinning ? { 
+                scale: 1.1,
+                rotateX: [0, -10, 10, 0],
+                transition: { duration: 0.4 },
+                boxShadow: '0 0 50px rgba(0, 212, 196, 0.6)',
+              } : {}}
+              whileTap={{ scale: 0.9 }}
             >
-              <span className="font-display font-bold text-sm text-white tracking-wider">
+              <motion.span 
+                className="font-display font-bold text-sm text-white tracking-wider"
+                animate={isSpinning ? { rotate: [0, 360] } : {}}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              >
                 SPIN
-              </span>
-            </div>
-          </div>
+              </motion.span>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* Info */}
         <p className="text-[10px] font-body tracking-wide text-center" style={{ color: '#555570' }}>
           Each spin costs 🪙1,000,000 RoamCoins
         </p>
+
+        {/* ===== 3D Floating Home Button ===== */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, ...springGentle }}
+          whileHover={{ 
+            scale: 1.05,
+            rotateX: -5,
+            rotateY: 5,
+            boxShadow: '0 10px 30px rgba(0, 212, 196, 0.3)',
+          }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/home')}
+          className="mt-4 px-5 py-2.5 rounded-full text-[11px] font-display font-semibold tracking-wider flex items-center gap-2 transition-all duration-300 preserve-3d"
+          style={{
+            background: 'rgba(20, 20, 31, 0.85)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(0, 212, 196, 0.2)',
+            color: '#00D4C4',
+            transformStyle: 'preserve-3d',
+          }}
+        >
+          <Home size={14} strokeWidth={2} />
+          Back to Home
+          <Compass size={14} strokeWidth={1.5} className="ml-1" style={{ color: 'rgba(0, 212, 196, 0.5)' }} />
+        </motion.button>
       </div>
 
       {/* ===== Result Modal ===== */}

@@ -1,12 +1,63 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Lock, Globe, Award } from 'lucide-react'
+import { ArrowLeft, Lock, Globe, Award, Search } from 'lucide-react'
 import StickyNote from '../components/StickyNote'
 import { useRoamie } from '../store/RoamieContext'
 
 /* ===== SPRING ===== */
 const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
+
+/* ===== REGIONS ===== */
+const regionOrder = ['Asia', 'Europe', 'Africa', 'North America', 'South America', 'Oceania', 'Other']
+
+const countryRegions: Record<string, string> = {
+  'India': 'Asia', 'Japan': 'Asia', 'China': 'Asia', 'South Korea': 'Asia', 'Thailand': 'Asia',
+  'Vietnam': 'Asia', 'Indonesia': 'Asia', 'Philippines': 'Asia', 'Malaysia': 'Asia', 'Singapore': 'Asia',
+  'Nepal': 'Asia', 'Sri Lanka': 'Asia', 'Bangladesh': 'Asia', 'Pakistan': 'Asia', 'Afghanistan': 'Asia',
+  'Iran': 'Asia', 'Iraq': 'Asia', 'Jordan': 'Asia', 'Lebanon': 'Asia', 'Syria': 'Asia',
+  'Yemen': 'Asia', 'Oman': 'Asia', 'Qatar': 'Asia', 'Bahrain': 'Asia', 'Kuwait': 'Asia',
+  'Maldives': 'Asia', 'Myanmar': 'Asia', 'Cambodia': 'Asia', 'Laos': 'Asia', 'Mongolia': 'Asia',
+  'Bhutan': 'Asia', 'Kazakhstan': 'Asia', 'Uzbekistan': 'Asia', 'Turkmenistan': 'Asia', 'Kyrgyzstan': 'Asia',
+  'Tajikistan': 'Asia', 'Armenia': 'Asia', 'Georgia': 'Asia', 'Azerbaijan': 'Asia',
+  'United Kingdom': 'Europe', 'France': 'Europe', 'Germany': 'Europe', 'Italy': 'Europe', 'Spain': 'Europe',
+  'Portugal': 'Europe', 'Netherlands': 'Europe', 'Switzerland': 'Europe', 'Sweden': 'Europe', 'Norway': 'Europe',
+  'Denmark': 'Europe', 'Finland': 'Europe', 'Poland': 'Europe', 'Ukraine': 'Europe', 'Czech Republic': 'Europe',
+  'Austria': 'Europe', 'Hungary': 'Europe', 'Romania': 'Europe', 'Bulgaria': 'Europe', 'Croatia': 'Europe',
+  'Serbia': 'Europe', 'Greece': 'Europe', 'Turkey': 'Europe', 'Russia': 'Europe', 'Belarus': 'Europe',
+  'Moldova': 'Europe', 'Lithuania': 'Europe', 'Latvia': 'Europe', 'Estonia': 'Europe', 'Slovakia': 'Europe',
+  'Slovenia': 'Europe', 'Bosnia': 'Europe', 'Albania': 'Europe', 'North Macedonia': 'Europe', 'Montenegro': 'Europe',
+  'Kosovo': 'Europe', 'Liechtenstein': 'Europe', 'Monaco': 'Europe', 'Andorra': 'Europe', 'San Marino': 'Europe',
+  'Vatican City': 'Europe', 'Malta': 'Europe', 'Luxembourg': 'Europe', 'Iceland': 'Europe', 'Ireland': 'Europe',
+  'Belgium': 'Europe', 'South Africa': 'Africa', 'Egypt': 'Africa', 'Kenya': 'Africa', 'Nigeria': 'Africa',
+  'Morocco': 'Africa', 'Ethiopia': 'Africa', 'Tanzania': 'Africa', 'Uganda': 'Africa', 'Rwanda': 'Africa',
+  'Sudan': 'Africa', 'South Sudan': 'Africa', 'DR Congo': 'Africa', 'Congo': 'Africa', 'Ghana': 'Africa',
+  "Côte d'Ivoire": 'Africa', 'Senegal': 'Africa', 'Mali': 'Africa', 'Burkina Faso': 'Africa', 'Niger': 'Africa',
+  'Chad': 'Africa', 'Cameroon': 'Africa', 'Gabon': 'Africa', 'Angola': 'Africa', 'Namibia': 'Africa',
+  'Botswana': 'Africa', 'Zambia': 'Africa', 'Zimbabwe': 'Africa', 'Mozambique': 'Africa', 'Madagascar': 'Africa',
+  'Mauritius': 'Africa', 'Seychelles': 'Africa', 'United States': 'North America', 'Canada': 'North America',
+  'Mexico': 'North America', 'Cuba': 'North America', 'Dominican Republic': 'North America', 'Puerto Rico': 'North America',
+  'Jamaica': 'North America', 'Bahamas': 'North America', 'Barbados': 'North America', 'Trinidad': 'North America',
+  'Guatemala': 'North America', 'Honduras': 'North America', 'Nicaragua': 'North America', 'Costa Rica': 'North America',
+  'Panama': 'North America', 'Brazil': 'South America', 'Argentina': 'South America', 'Chile': 'South America',
+  'Colombia': 'South America', 'Peru': 'South America', 'Bolivia': 'South America', 'Paraguay': 'South America',
+  'Uruguay': 'South America', 'Guyana': 'South America', 'Suriname': 'South America', 'French Guiana': 'South America',
+  'Ecuador': 'South America', 'Australia': 'Oceania', 'New Zealand': 'Oceania', 'Fiji': 'Oceania',
+  'Papua New Guinea': 'Oceania', 'Solomon Islands': 'Oceania', 'Vanuatu': 'Oceania', 'Samoa': 'Oceania',
+  'Tonga': 'Oceania', 'Micronesia': 'Oceania', 'Marshall Islands': 'Oceania', 'Palau': 'Oceania',
+  'Nauru': 'Oceania', 'Kiribati': 'Oceania', 'Tuvalu': 'Oceania',
+  'UAE': 'Asia', 'Saudi Arabia': 'Asia', 'Israel': 'Asia',
+}
+
+const regionEmojis: Record<string, string> = {
+  'Asia': '🌏',
+  'Europe': '🌍',
+  'Africa': '🌍',
+  'North America': '🌎',
+  'South America': '🌎',
+  'Oceania': '🌏',
+  'Other': '🌐',
+}
 
 /* ===== COUNTRY FLAGS (emoji) AND NAMES ===== */
 const countries = [
@@ -174,14 +225,96 @@ const countries = [
 
 const TOTAL_COUNTRIES = countries.length
 
+/* ===== COUNTRY CARD with 3D flip effect ===== */
+function CountryFlagCard({ country, index }: { country: (typeof countries)[0]; index: number }) {
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.002 }}
+      className="relative perspective-600 cursor-pointer"
+      style={{ height: '56px' }}
+      onClick={() => country.unlocked && setIsFlipped(!isFlipped)}
+    >
+      <motion.div
+        className="absolute inset-0 preserve-3d"
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Front face */}
+        <div
+          className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-1.5 rounded-sm"
+          style={{
+            background: country.unlocked
+              ? 'rgba(0, 212, 196, 0.06)'
+              : 'rgba(20, 20, 31, 0.5)',
+            border: country.unlocked
+              ? '1px solid rgba(0, 212, 196, 0.15)'
+              : '1px solid rgba(42, 42, 62, 0.2)',
+            filter: country.unlocked ? 'none' : 'grayscale(100%)',
+            opacity: country.unlocked ? 1 : 0.4,
+          }}
+        >
+          <span className="text-lg leading-none">{country.code}</span>
+          <span
+            className="text-[6px] font-body text-center mt-0.5 leading-tight truncate w-full"
+            style={{ color: country.unlocked ? '#8888A0' : '#555570' }}
+          >
+            {country.unlocked ? country.name : '???'}
+          </span>
+          {!country.unlocked && (
+            <Lock size={8} strokeWidth={2} className="absolute top-1 right-1" style={{ color: '#555570' }} />
+          )}
+        </div>
+
+        {/* Back face — shows region info on flip */}
+        <div
+          className="absolute inset-0 backface-hidden flex items-center justify-center rounded-sm"
+          style={{
+            transform: 'rotateY(180deg)',
+            background: 'linear-gradient(135deg, rgba(0, 212, 196, 0.1), rgba(42, 107, 255, 0.08))',
+            border: '1px solid rgba(0, 212, 196, 0.3)',
+          }}
+        >
+          <span className="text-[7px] font-display font-semibold gradient-text text-center leading-tight px-1">
+            {countryRegions[country.name] || 'Explore!'}
+          </span>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 /* ===== MAIN PASSPORT COMPONENT ===== */
 export default function Passport() {
   const navigate = useNavigate()
   const { state } = useRoamie()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
 
   const unlockedCount = useMemo(() => countries.filter(c => c.unlocked).length, [])
-
   const progressPercent = (unlockedCount / TOTAL_COUNTRIES) * 100
+
+  // Filter and group countries
+  const { groupedFiltered, totalFiltered } = useMemo(() => {
+    const filtered = searchQuery.trim()
+      ? countries.filter(c =>
+          c.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : countries
+
+    const grouped: Record<string, typeof countries> = {}
+    filtered.forEach(c => {
+      const region = countryRegions[c.name] || 'Other'
+      if (!grouped[region]) grouped[region] = []
+      grouped[region].push(c)
+    })
+
+    return { groupedFiltered: grouped, totalFiltered: filtered.length }
+  }, [searchQuery])
 
   return (
     <div className="relative min-h-dvh bg-base-bg flex flex-col">
@@ -224,8 +357,43 @@ export default function Passport() {
         </div>
       </div>
 
+      {/* ===== Search Bar ===== */}
+      <div className="relative z-10 px-4 pt-3 pb-1 flex-shrink-0">
+        <div
+          className="relative flex items-center gap-2 rounded-sm px-3 py-2"
+          style={{
+            background: '#14141F',
+            border: searchFocused
+              ? '1px solid rgba(0, 212, 196, 0.3)'
+              : '1px solid rgba(42, 42, 62, 0.3)',
+            boxShadow: searchFocused ? '0 0 15px rgba(0, 212, 196, 0.05)' : 'none',
+            transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+          }}
+        >
+          <Search size={14} strokeWidth={1.5} className="text-text-secondary/50" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            placeholder="Search countries..."
+            className="flex-1 bg-transparent text-xs text-text-primary placeholder-text-secondary/50 outline-none"
+            style={{ fontFamily: "'Inter', sans-serif" }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-text-secondary/40 hover:text-text-secondary transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ===== Content ===== */}
-      <div className="relative z-10 flex-1 overflow-y-auto scrollbar-none px-4 pt-4 pb-6">
+      <div className="relative z-10 flex-1 overflow-y-auto scrollbar-none px-4 pt-3 pb-6">
         {/* Passport Book Cover */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -256,7 +424,7 @@ export default function Passport() {
           </div>
 
           {/* Progress bar */}
-          <div className="px-4 py-3" style={{ background: '#0D1B33', borderTop: '1px solid rgba(0, 212, 196, 0.1)' }}>
+          <div className="px-4 py-3 sticky z-10" style={{ background: '#0D1B33', borderTop: '1px solid rgba(0, 212, 196, 0.1)' }}>
             <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: '#1A2A44' }}>
               <motion.div
                 initial={{ width: 0 }}
@@ -284,46 +452,53 @@ export default function Passport() {
           </div>
         </motion.div>
 
-        {/* Country Grid */}
-        <div className="grid grid-cols-4 gap-2">
-          {countries.map((country, i) => (
-            <motion.div
-              key={country.name}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.003 }}
-              className="relative flex flex-col items-center justify-center p-1.5 rounded-sm cursor-default"
-              style={{
-                background: country.unlocked
-                  ? 'rgba(0, 212, 196, 0.06)'
-                  : 'rgba(20, 20, 31, 0.5)',
-                border: country.unlocked
-                  ? '1px solid rgba(0, 212, 196, 0.15)'
-                  : '1px solid rgba(42, 42, 62, 0.2)',
-                filter: country.unlocked ? 'none' : 'grayscale(100%)',
-                opacity: country.unlocked ? 1 : 0.4,
-                transition: 'all 0.3s ease',
-              }}
-              whileHover={country.unlocked ? { scale: 1.1, y: -2 } : undefined}
-            >
-              <span className="text-lg leading-none">{country.code}</span>
-              <span
-                className="text-[6px] font-body text-center mt-0.5 leading-tight truncate w-full"
-                style={{ color: country.unlocked ? '#8888A0' : '#555570' }}
+        {/* Country Grid with Regions */}
+        {regionOrder.map((region) => {
+          const regionCountries = groupedFiltered[region]
+          if (!regionCountries || regionCountries.length === 0) return null
+
+          const regionUnlocked = regionCountries.filter(c => c.unlocked).length
+
+          return (
+            <div key={region} className="mb-5">
+              {/* Region header */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 mb-2 px-1"
               >
-                {country.unlocked ? country.name : '???'}
-              </span>
-              {!country.unlocked && (
-                <Lock
-                  size={8}
-                  strokeWidth={2}
-                  className="absolute top-1 right-1"
-                  style={{ color: '#555570' }}
-                />
-              )}
-            </motion.div>
-          ))}
-        </div>
+                <span className="text-sm">{regionEmojis[region]}</span>
+                <h3 className="text-[11px] font-display font-semibold text-text-primary uppercase tracking-wider">
+                  {region}
+                </h3>
+                <div className="flex-1 h-[1px]" style={{ background: 'rgba(42, 42, 62, 0.3)' }} />
+                <span className="text-[9px] font-mono text-text-secondary/60">
+                  {regionUnlocked}/{regionCountries.length}
+                </span>
+              </motion.div>
+
+              {/* Country grid for this region */}
+              <div className="grid grid-cols-4 gap-2">
+                {regionCountries.map((country, i) => (
+                  <CountryFlagCard key={country.name} country={country} index={i} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* No results */}
+        {totalFiltered === 0 && searchQuery && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <p className="font-handwritten text-sm" style={{ color: 'rgba(0, 212, 196, 0.4)' }}>
+              No countries found for "{searchQuery}" 🌍
+            </p>
+          </motion.div>
+        )}
       </div>
     </div>
   )

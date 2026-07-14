@@ -171,6 +171,151 @@ body {
   animation: gradientShift 6s ease-in-out infinite;
 }
 
+/* ===== 3D PERSPECTIVE UTILITIES ===== */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-800 {
+  perspective: 800px;
+}
+
+.perspective-600 {
+  perspective: 600px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* ===== 3D KEYFRAMES ===== */
+@keyframes tiltIn3D {
+  0% {
+    transform: perspective(800px) rotateX(10deg) rotateY(-10deg) translateZ(-50px);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px);
+    opacity: 1;
+  }
+}
+
+@keyframes float3D {
+  0%, 100% {
+    transform: perspective(600px) rotateX(2deg) rotateY(0deg) translateZ(0px);
+  }
+  25% {
+    transform: perspective(600px) rotateX(0deg) rotateY(3deg) translateZ(10px);
+  }
+  50% {
+    transform: perspective(600px) rotateX(-1deg) rotateY(0deg) translateZ(0px);
+  }
+  75% {
+    transform: perspective(600px) rotateX(0deg) rotateY(-3deg) translateZ(10px);
+  }
+}
+
+@keyframes cardFlip {
+  0% {
+    transform: perspective(800px) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(800px) rotateY(180deg);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes radarScan {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp3D {
+  0% {
+    transform: perspective(800px) rotateX(5deg) translateY(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(800px) rotateX(0deg) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-tilt3d {
+  animation: tiltIn3D 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-float3d {
+  animation: float3D 6s ease-in-out infinite;
+}
+
+.animate-radar-scan {
+  animation: radarScan 4s linear infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.animate-slide-up-3d {
+  animation: slideUp3D 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ===== 3D CARD TILT ON HOVER (applied via JS) ===== */
+.card-3d-tilt {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.card-3d-tilt:hover {
+  transform: perspective(800px) rotateX(var(--tilt-x, -3deg)) rotateY(var(--tilt-y, 5deg)) translateZ(20px);
+}
+
+/* ===== CONFETTI PARTICLE ===== */
+.confetti-particle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confettiFall 2.5s ease-in forwards;
+  pointer-events: none;
+  z-index: 9998;
+}
+
 /* ===== SCROLLBAR HIDE ===== */
 .scrollbar-none {
   -ms-overflow-style: none;
@@ -189,8 +334,17 @@ body {
   .animate-breathe,
   .animate-float,
   .animate-pulse-glow,
-  .animate-gradient-shift {
+  .animate-gradient-shift,
+  .animate-tilt3d,
+  .animate-float3d,
+  .animate-radar-scan,
+  .animate-pulse-ring,
+  .animate-slide-up-3d {
     animation: none;
+  }
+
+  .card-3d-tilt {
+    transform: none !important;
   }
 
   *, *::before, *::after {

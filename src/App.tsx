@@ -45,7 +45,7 @@ function PageFallback() {
 
 export default function App() {
   const location = useLocation()
-  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/onboard-v2' || location.pathname === '/auth' || location.pathname === '/plan' || location.pathname.startsWith('/itinerary') || location.pathname === '/pro' || location.pathname === '/chat' || location.pathname === '/stats' || location.pathname === '/spin'
+  const hideNav = location.pathname === '/' || location.pathname === '/onboarding' || location.pathname === '/onboard-v2' || location.pathname === '/auth' || location.pathname === '/plan' || location.pathname.startsWith('/itinerary') || location.pathname === '/pro' || location.pathname === '/chat' || location.pathname === '/stats'
 
   // Preload frequently visited pages after initial render so chunks are cached
   // before the user clicks navigation

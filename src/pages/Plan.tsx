@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Send, MapPin, Wallet, CheckCircle, X } from 'lucide-react'
-import { RoamieBubble, UserBubble, TypingDots } from '../components/ChatUI'
+import { RoamieBubble, UserBubble, TypingDots, WobblyLine } from '../components/ChatUI'
 import { useRoamie, generateId } from '../store/RoamieContext'
 import type { ItineraryItem } from '../store/RoamieContext'
 import { generateTrip, type AITripResponse, type AIRecommendationOption } from '../lib/ai'
@@ -64,6 +64,32 @@ function LoadingCompass() {
         <p className="text-[10px] font-body text-text-secondary mt-1 opacity-60">weaving your itinerary</p>
       </div>
     </motion.div>
+  )
+}
+
+/* ===== 3D CONFETTI ===== */
+function ConfettiBurst() {
+  const colors = ['#00D4C4', '#2A6BFF', '#8A2BE2', '#FFD23F', '#FF6B6B', '#22C55E']
+  return (
+    <>
+      {Array.from({ length: 15 }, (_, i) => (
+        <div
+          key={i}
+          className="confetti-particle"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: '-10px',
+            width: `${Math.random() * 6 + 4}px`,
+            height: `${Math.random() * 6 + 4}px`,
+            background: colors[i % colors.length],
+            borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+            animationDelay: `${Math.random() * 0.5}s`,
+            animationDuration: `${Math.random() * 1.5 + 2}s`,
+            boxShadow: `0 0 6px ${colors[i % colors.length]}`,
+          }}
+        />
+      ))}
+    </>
   )
 }
 
@@ -527,7 +553,7 @@ export default function Plan() {
       >
         {/* --- GREETING --- */}
         {interviewStep >= 0 && (
-          <RoamieBubble delay={0.15}>
+          <RoamieBubble delay={0.15} nickname={nickname}>
             Hey <span className="gradient-text">{state.name || 'wanderer'}</span>! Where do you want to visit? 🌍
           </RoamieBubble>
         )}
@@ -537,9 +563,12 @@ export default function Plan() {
           <UserBubble delay={0.1}>{destination}</UserBubble>
         )}
 
-        {/* --- STEP 2: BUDGET QUESTION --- */}
+        {/* --- WOBBLY LINE (between conversation phases) --- */}
+        {interviewStep >= 1 && destination && budget && <WobblyLine />}
+
+    {/* --- STEP 2: BUDGET QUESTION --- */}
         {interviewStep >= 1 && !isTyping && (
-          <RoamieBubble delay={0.1}>
+          <RoamieBubble delay={0.1} nickname={nickname}>
             {destination ? `Ooh ${destination}! 🎯 What's your budget for this trip?` : "What's your budget?"}
           </RoamieBubble>
         )}
@@ -549,9 +578,12 @@ export default function Plan() {
           <UserBubble delay={0.1}>{budget}</UserBubble>
         )}
 
+        {/* --- WOBBLY LINE --- */}
+        {budget && tripDate && <WobblyLine />}
+
         {/* --- STEP 3: DATE QUESTION --- */}
         {interviewStep >= 2 && !isTyping && (
-          <RoamieBubble delay={0.1}>
+          <RoamieBubble delay={0.1} nickname={nickname}>
             {budget ? `Got it! When exactly are you planning to go? (Give me the date 📅)` : "When exactly? Give me the date"}
           </RoamieBubble>
         )}
@@ -564,10 +596,13 @@ export default function Plan() {
         {/* --- TYPING DOTS --- */}
         {isTyping && <TypingDots />}
 
+        {/* --- WOBBLY LINE --- */}
+        {tripDate && <WobblyLine />}
+
         {/* --- LOADING COMPASS (Step 3) --- */}
         {interviewStep === 3 && (
           <>
-            <RoamieBubble delay={0.1}>
+            <RoamieBubble delay={0.1} nickname={nickname}>
               Give me a moment, weaving something special for {destination}...
             </RoamieBubble>
             <LoadingCompass />
@@ -582,9 +617,12 @@ export default function Plan() {
         )}
 
         {/* --- STEP 4: REVEAL + BOOKING OPTIONS --- */}
+        {/* --- WOBBLY LINE --- */}
+        {interviewStep >= 4 && aiResult && <WobblyLine />}
+
         {interviewStep >= 4 && aiResult && (
           <>
-            <RoamieBubble delay={0.1}>
+            <RoamieBubble delay={0.1} nickname={nickname}>
               Your adventure is ready! 🎉 Here's everything for {aiResult.destination}.
             </RoamieBubble>
 
@@ -776,14 +814,18 @@ export default function Plan() {
         </div>
       )}
 
-      {/* ===== Payment Sheet ===== */}
-      {showPayment && (
+      {/* ===== Payment Sheet ===== */}      {showPayment && (
         <MockPaymentSheet
           totalAmount={totalAmount}
-          onPay={handlePaymentDone}
+          onPay={() => {
+            handlePaymentDone()
+            dispatch({ type: 'ADD_COINS', payload: 100 })
+          }}
           onClose={() => setShowPayment(false)}
         />
       )}
+
+      {isSaved && <ConfettiBurst />}
     </div>
   )
 }
