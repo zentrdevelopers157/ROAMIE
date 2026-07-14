@@ -19,11 +19,7 @@ import {
   Users,
   Bell,
   BellOff,
-  Dices,
-  Book,
 } from 'lucide-react'
-import PolaroidCard from '../components/PolaroidCard'
-import PushPin from '../components/PushPin'
 import { useRoamie } from '../store/RoamieContext'
 import {
   getBrowserNotificationStatus,
@@ -216,23 +212,23 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
       >
-        <PolaroidCard rotate={1} enable3DTilt className="w-full mb-6">
+        <div className="rounded-3xl mb-6 overflow-hidden" style={{ background: '#1A1A2E', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
           <div className="flex flex-col items-center px-2 py-3">
             {/* Avatar */}
             <div className="relative mb-3">
               <div
-                className="h-20 w-20 rounded-full bg-cover bg-center ring-2 ring-brand-cyan/20"
+                className="h-20 w-20 rounded-full bg-cover bg-center"
                 style={{
                   backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=60&fm=webp)',
+                  boxShadow: '0 0 0 2px rgba(99, 102, 241, 0.2)',
                 }}
                 role="img"
                 aria-label="Profile photo"
               />
-              <PushPin className="absolute -top-1 -right-1" />
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #00D4C4, #2A6BFF)' }}
+                style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}
                 aria-label="Edit profile"
               >
                 <Edit3 size={12} strokeWidth={2.5} className="text-white" />
@@ -240,10 +236,10 @@ export default function Profile() {
             </div>
 
             {/* Name */}
-            <h2 className="text-lg font-display font-bold text-[#1A1A2E]">
+            <h2 className="text-lg font-bold text-text-primary">
               {state.name || 'Traveler'}
             </h2>
-            <p className="text-[11px] text-text-secondary/70 font-body">
+            <p className="text-[11px] font-sans" style={{ color: '#8888A0' }}>
               {state.onboarded ? 'Adventure awaits' : 'New to ROAMIE'}
             </p>
 
@@ -276,11 +272,11 @@ export default function Profile() {
                 return (
                   <div
                     key={vibeIdx}
-                    className="flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-display font-semibold"
+                    className="flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-semibold"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(0, 212, 196, 0.1), rgba(138, 43, 226, 0.1))',
-                      border: '1px solid rgba(0, 212, 196, 0.2)',
-                      color: '#00D4C4',
+                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))',
+                      border: '1px solid rgba(99, 102, 241, 0.2)',
+                      color: '#818CF8',
                     }}
                   >
                     {VibeIcon && <VibeIcon size={10} strokeWidth={2} />}
@@ -290,7 +286,7 @@ export default function Profile() {
               })}
             </div>
           )}
-        </PolaroidCard>
+        </div>
       </motion.div>
 
       {/* Toggle between Stats & Settings */}
@@ -308,8 +304,6 @@ export default function Profile() {
           <div className="bg-card-bg rounded-lg px-4 border border-[#2A2A3E]/40 shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
             <SettingRow icon={User} label="Edit Profile" description="Name, avatar, travel vibe" />
             <NotificationSetting />
-            <SettingRow icon={Dices} label="🎰 Spin & Win" description="Win trips with RoamCoins" onClick={() => navigate('/spin')} />
-            <SettingRow icon={Book} label="🌍 Global Passport" description="Collect every country" onClick={() => navigate('/passport')} />
             <SettingRow icon={Globe} label="Language" description="English (US)" />
             <SettingRow icon={Star} label="✨ Roamie Pro" description="Unlock premium features" onClick={() => navigate('/pro')} />
             <SettingRow icon={Star} label="Rate ROAMIE" description="Share your feedback" />

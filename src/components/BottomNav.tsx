@@ -1,21 +1,11 @@
-import { useState, type ComponentType } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  Home,
-  Map,
-  Plus,
-  Hash,
-  User,
-  Globe,
-  Book,
-  type LucideIcon,
-} from 'lucide-react'
-import { useRoamie } from '../store/RoamieContext'
+import { Home, Map, Plus, Users, User } from 'lucide-react'
 
 interface NavItem {
   path: string
-  icon: LucideIcon | ComponentType<{ size?: number; strokeWidth?: number }>
+  icon: typeof Home
   label: string
   isCenter?: boolean
 }
@@ -23,10 +13,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/home', icon: Home, label: 'Home' },
   { path: '/trips', icon: Map, label: 'Trips' },
-  { path: '/radar', icon: Globe, label: 'Radar' },
   { path: '/plan', icon: Plus, label: 'Plan', isCenter: true },
-  { path: '/feed', icon: Hash, label: 'Feed' },
-  { path: '/passport', icon: Book, label: 'Passport' },
+  { path: '/feed', icon: Users, label: 'Feed' },
   { path: '/profile', icon: User, label: 'Profile' },
 ]
 
@@ -34,7 +22,6 @@ export default function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const [hoveredPath, setHoveredPath] = useState<string | null>(null)
-  const { state } = useRoamie()
 
   const handleNavigate = (path: string) => {
     navigate(path)
@@ -45,18 +32,8 @@ export default function BottomNav() {
       {/* Background with glass effect */}
       <div className="absolute inset-0 bg-[#14141F]/90 backdrop-blur-xl border-t border-[#2A2A3E]/60" />
 
-      {/* RoamCoin indicator */}
-      <div className="relative flex items-center justify-center pt-1.5 pb-0.5">
-        <span
-          className="font-handwritten text-xs"
-          style={{ color: '#FFD23F' }}
-        >
-          🪙 {(state.roamCoins ?? 100).toLocaleString()}
-        </span>
-      </div>
-
-      {/* Navigation items — scrollable on small screens */}
-      <div className="relative flex items-center gap-0.5 overflow-x-auto scrollbar-none px-2 pb-[calc(env(safe-area-inset-bottom,8px)+4px)] pt-1" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+      {/* Navigation items */}
+      <div className="relative flex items-center justify-center gap-1 px-2 pb-[calc(env(safe-area-inset-bottom,8px)+4px)] pt-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           const isHovered = hoveredPath === item.path
@@ -69,9 +46,8 @@ export default function BottomNav() {
                 onClick={() => handleNavigate(item.path)}
                 onMouseEnter={() => setHoveredPath(item.path)}
                 onMouseLeave={() => setHoveredPath(null)}
-                className="relative -mt-6 flex h-14 w-14 items-center justify-center rounded-full flex-shrink-0 sticky z-10"
+                className="relative -mt-6 flex h-14 w-14 items-center justify-center rounded-full flex-shrink-0"
                 style={{
-                  left: 'calc(50% - 28px)',
                   background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
                   boxShadow: isActive || isHovered
                     ? '0 0 25px rgba(0, 212, 196, 0.4), 0 0 50px rgba(42, 107, 255, 0.2), 0 0 70px rgba(138, 43, 226, 0.15)'
@@ -92,8 +68,7 @@ export default function BottomNav() {
               onClick={() => handleNavigate(item.path)}
               onMouseEnter={() => setHoveredPath(item.path)}
               onMouseLeave={() => setHoveredPath(null)}
-              className="relative flex flex-col items-center gap-1 px-3 py-1 flex-shrink-0"
-              style={{ scrollSnapAlign: 'center' }}
+              className="relative flex flex-col items-center gap-1 px-5 py-1 flex-shrink-0"
               whileTap={{ scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             >

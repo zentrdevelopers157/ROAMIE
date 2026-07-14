@@ -1,14 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Send, MapPin, Wallet, CheckCircle, X } from 'lucide-react'
-import { RoamieBubble, UserBubble, TypingDots, WobblyLine } from '../components/ChatUI'
+import { Send, MapPin, Wallet, CheckCircle, X, Sparkles } from 'lucide-react'
+import { RoamieBubble, UserBubble, TypingDots } from '../components/ChatUI'
 import { useRoamie, generateId } from '../store/RoamieContext'
 import type { ItineraryItem } from '../store/RoamieContext'
 import { generateTrip, type AITripResponse, type AIRecommendationOption } from '../lib/ai'
-import StickyNote from '../components/StickyNote'
-import WashiTape from '../components/WashiTape'
-import PolaroidCard from '../components/PolaroidCard'
 
 /* ===== SPRINGS ===== */
 const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
@@ -24,44 +21,55 @@ const topoBg: React.CSSProperties = {
   `,
 }
 
-/* ===== SPINNING COMPASS CARD (reused) ===== */
-function LoadingCompass() {
+/* ===== PULSING DOTS LOADING ===== */
+function PulsingDots() {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="max-w-[200px] mx-auto my-4"
+      className="max-w-[240px] mx-auto my-4"
     >
       <div
-        className="relative rounded-sm p-4 text-center shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+        className="rounded-2xl p-5 text-center"
         style={{
-          background: '#14141F',
-          borderLeft: '2px solid rgba(0, 212, 196, 0.15)',
+          background: 'rgba(99, 102, 241, 0.08)',
+          border: '1px solid rgba(99, 102, 241, 0.15)',
+          backdropFilter: 'blur(8px)',
         }}
       >
-        <div className="relative w-16 h-16 mx-auto mb-3">
+        {/* Glowing starburst gradient */}
+        <div className="relative w-16 h-16 mx-auto mb-3 flex items-center justify-center">
           <motion.div
             className="absolute inset-0 rounded-full"
-            animate={{ boxShadow: ['0 0 15px rgba(0,212,196,0.15)', '0 0 30px rgba(0,212,196,0.3)', '0 0 15px rgba(0,212,196,0.15)'] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            style={{
+              background: 'radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+            }}
+            animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <motion.div
-            className="relative z-10 w-full h-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-          >
-            <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
-              <path d="M40 6 C50 5 62 10 68 18 C74 26 76 38 74 48 C72 58 66 68 56 72 C46 76 34 76 24 72 C14 68 8 58 6 48 C4 38 6 26 12 18 C18 10 30 7 40 6Z" stroke="#00D4C4" strokeWidth="1.8" fill="none" opacity="0.8" strokeDasharray="2 3" />
-              <line x1="40" y1="10" x2="40" y2="30" stroke="#00D4C4" strokeWidth="1.2" opacity="0.5" />
-              <line x1="40" y1="50" x2="40" y2="70" stroke="#2A6BFF" strokeWidth="1.2" opacity="0.5" />
-              <path d="M40 12 L44 28 L42 30 L40 34 L38 30 L36 28 Z" fill="#00D4C4" opacity="0.9" />
-              <circle cx="40" cy="40" r="3" fill="#00D4C4" />
-            </svg>
-          </motion.div>
+          <Sparkles size={24} style={{ color: '#818CF8' }} />
         </div>
-        <p className="font-handwritten text-sm gradient-text font-medium">Finding hidden gems...</p>
-        <p className="text-[10px] font-body text-text-secondary mt-1 opacity-60">weaving your itinerary</p>
+        
+        {/* 3 pulsing dots */}
+        <div className="flex items-center justify-center gap-1.5 mb-2">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-2 h-2 rounded-full"
+              style={{ background: '#818CF8' }}
+              animate={{ scale: [0.7, 1.2, 0.7], opacity: [0.4, 1, 0.4] }}
+              transition={{
+                duration: 1.2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.2,
+              }}
+            />
+          ))}
+        </div>
+        <p className="text-sm font-semibold" style={{ color: '#C0C0F0' }}>Finding hidden gems...</p>
+        <p className="text-[10px] font-sans mt-0.5" style={{ color: '#8888A0' }}>weaving your itinerary</p>
       </div>
     </motion.div>
   )
@@ -93,7 +101,7 @@ function ConfettiBurst() {
   )
 }
 
-/* ===== SELECTION CARD (PolaroidCard for booking options) ===== */
+/* ===== SELECTION CARD (modern glass card for booking options) ===== */
 function SelectionCard({
   option,
   type,
@@ -115,26 +123,29 @@ function SelectionCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ ...springGentle, delay: index * 0.1 }}
     >
-      <PolaroidCard rotate={index % 2 === 0 ? 0.5 : -0.5} className="w-full mb-2">
+      <div
+        className="w-full mb-2 rounded-2xl overflow-hidden"
+        style={{
+          background: '#12121F',
+          backdropFilter: 'blur(8px)',
+          border: selected ? '1.5px solid #818CF8' : '1px solid rgba(255,255,255,0.06)',
+          boxShadow: selected ? '0 0 20px rgba(99, 102, 241, 0.2)' : '0 4px 16px rgba(0,0,0,0.2)',
+          transition: 'all 0.3s ease',
+        }}
+      >
         <div
-          className="px-2 py-2 cursor-pointer transition-all duration-300"
+          className="px-3 py-2.5 cursor-pointer"
           onClick={onSelect}
-          style={{
-            border: selected ? '2px solid #00D4C4' : '2px solid transparent',
-            borderRadius: '4px',
-            boxShadow: selected ? '0 0 20px rgba(0, 212, 196, 0.3), inset 0 0 20px rgba(0, 212, 196, 0.05)' : 'none',
-            transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-          }}
         >
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5">
               <span className="text-lg">{typeEmoji}</span>
-              <span className="text-[13px] font-display font-semibold text-[#1A1A2E]">{option.name}</span>
+              <span className="text-[13px] font-semibold text-text-primary">{option.name}</span>
             </div>
-            <span className="text-sm font-display font-bold gradient-text">₹{option.price.toLocaleString('en-IN')}</span>
+            <span className="text-sm font-bold" style={{ color: '#818CF8' }}>₹{option.price.toLocaleString('en-IN')}</span>
           </div>
 
-          <p className="text-[10px] font-body leading-relaxed" style={{ color: '#8888A0' }}>
+          <p className="text-[10px] font-sans leading-relaxed" style={{ color: '#8888A0' }}>
             {option.reason}
           </p>
 
@@ -142,19 +153,19 @@ function SelectionCard({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
             onClick={(e) => { e.stopPropagation(); onSelect() }}
-            className="mt-2 w-full py-1.5 rounded-full text-[10px] font-display font-semibold tracking-wider transition-all duration-200"
+            className="mt-2 w-full py-1.5 rounded-full text-[10px] font-semibold tracking-wider transition-all duration-200"
             style={{
               background: selected
-                ? 'linear-gradient(135deg, #00D4C4, #2A6BFF)'
-                : 'rgba(0, 212, 196, 0.08)',
-              border: selected ? 'none' : '1px solid rgba(0, 212, 196, 0.2)',
-              color: selected ? '#0A0A12' : '#00D4C4',
+                ? 'linear-gradient(135deg, #6366F1, #8B5CF6)'
+                : 'rgba(99, 102, 241, 0.08)',
+              border: selected ? 'none' : '1px solid rgba(99, 102, 241, 0.2)',
+              color: selected ? '#FFFFFF' : '#818CF8',
             }}
           >
             {selected ? '✓ Selected' : 'Select'}
           </motion.button>
         </div>
-      </PolaroidCard>
+      </div>
     </motion.div>
   )
 }
@@ -203,30 +214,27 @@ function MockPaymentSheet({
             boxShadow: '0 -4px 30px rgba(0,0,0,0.4)',
           }}
         >
-          <WashiTape color="cyan" rotate={2} className="-top-3 left-1/2 -translate-x-1/2" />
-          <StickyNote rotate={0.5}>
-            <div className="text-center">
-              <span className="text-3xl block mb-2">✅</span>
-              <p className="font-handwritten text-base gradient-text font-medium">
-                Payment Simulated!
-              </p>
-              <p className="font-handwritten text-sm gradient-text mt-1">
-                Booking Confirmed ✅
-              </p>
-              <p className="text-[10px] font-body mt-2" style={{ color: '#8888A0' }}>
-                ₹{totalAmount.toLocaleString('en-IN')} charged to {upiId || 'your UPI'}
-              </p>
-            </div>
-          </StickyNote>
+          <div className="rounded-2xl p-5 text-center max-w-xs mx-auto" style={{ background: '#12121F', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+            <span className="text-3xl block mb-2">✅</span>
+            <p className="text-base font-bold" style={{ color: '#818CF8' }}>
+              Payment Simulated!
+            </p>
+            <p className="text-sm font-semibold mt-1" style={{ color: '#A78BFA' }}>
+              Booking Confirmed ✅
+            </p>
+            <p className="text-[10px] font-sans mt-2" style={{ color: '#8888A0' }}>
+              ₹{totalAmount.toLocaleString('en-IN')} charged to {upiId || 'your UPI'}
+            </p>
+          </div>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
             onClick={onClose}
-            className="mt-4 px-6 py-2 rounded-full text-[11px] font-display font-semibold tracking-wider"
+            className="mt-4 px-6 py-2 rounded-full text-[11px] font-semibold tracking-wider"
             style={{
-              background: 'rgba(0, 212, 196, 0.1)',
-              border: '1px solid rgba(0, 212, 196, 0.2)',
-              color: '#00D4C4',
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              color: '#818CF8',
             }}
           >
             Done
@@ -256,10 +264,8 @@ function MockPaymentSheet({
           boxShadow: '0 -4px 30px rgba(0,0,0,0.4)',
         }}
       >
-        <WashiTape color="purple" rotate={2} className="-top-3 left-1/2 -translate-x-1/2" />
-
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-handwritten text-base gradient-text font-medium">
+          <h3 className="text-base font-bold" style={{ color: '#818CF8' }}>
             💳 Complete Payment
           </h3>
           <button onClick={onClose} className="text-text-secondary text-xs">
@@ -563,9 +569,6 @@ export default function Plan() {
           <UserBubble delay={0.1}>{destination}</UserBubble>
         )}
 
-        {/* --- WOBBLY LINE (between conversation phases) --- */}
-        {interviewStep >= 1 && destination && budget && <WobblyLine />}
-
     {/* --- STEP 2: BUDGET QUESTION --- */}
         {interviewStep >= 1 && !isTyping && (
           <RoamieBubble delay={0.1} nickname={nickname}>
@@ -577,9 +580,6 @@ export default function Plan() {
         {budget && (
           <UserBubble delay={0.1}>{budget}</UserBubble>
         )}
-
-        {/* --- WOBBLY LINE --- */}
-        {budget && tripDate && <WobblyLine />}
 
         {/* --- STEP 3: DATE QUESTION --- */}
         {interviewStep >= 2 && !isTyping && (
@@ -596,30 +596,32 @@ export default function Plan() {
         {/* --- TYPING DOTS --- */}
         {isTyping && <TypingDots />}
 
-        {/* --- WOBBLY LINE --- */}
-        {tripDate && <WobblyLine />}
-
-        {/* --- LOADING COMPASS (Step 3) --- */}
+        {/* --- LOADING (Step 3) --- */}
         {interviewStep === 3 && (
           <>
             <RoamieBubble delay={0.1} nickname={nickname}>
               Give me a moment, weaving something special for {destination}...
             </RoamieBubble>
-            <LoadingCompass />
+            <PulsingDots />
             {aiError && (
-              <StickyNote rotate={0.5} className="max-w-[250px] mx-auto" delay={0.3}>
-                <p className="font-handwritten text-sm gradient-text text-center">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="max-w-[250px] mx-auto rounded-xl p-3 text-center"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.15)',
+                }}
+              >
+                <p className="text-sm font-medium" style={{ color: '#F87171' }}>
                   Oops, my brain fuzzed out. Try again?
                 </p>
-              </StickyNote>
+              </motion.div>
             )}
           </>
         )}
 
         {/* --- STEP 4: REVEAL + BOOKING OPTIONS --- */}
-        {/* --- WOBBLY LINE --- */}
-        {interviewStep >= 4 && aiResult && <WobblyLine />}
-
         {interviewStep >= 4 && aiResult && (
           <>
             <RoamieBubble delay={0.1} nickname={nickname}>

@@ -8,8 +8,7 @@ import { createPost } from '../lib/db'
 import { useAuth } from '../store/AuthContext'
 import TripMap from '../components/TripMap'
 import type { MapActivity } from '../components/TripMap'
-import PolaroidCard from '../components/PolaroidCard'
-import StickyNote from '../components/StickyNote'
+
 
 /* ===== SPRINGS ===== */
 /* ===== TOPOGRAPHIC BG (matches Plan page) ===== */
@@ -213,15 +212,13 @@ export default function Itinerary() {
   if (!trip) {
     return (
       <div className="relative h-dvh flex flex-col items-center justify-center px-6" style={topoBg}>
-        <StickyNote rotate={0.5}>
-          <div className="text-center px-2">
-            <span className="text-3xl block mb-2">🗺️</span>
-            <p className="font-handwritten text-lg gradient-text">Trip not found</p>
-            <p className="font-handwritten text-xs gradient-text mt-1">
-              This journey doesn't exist yet...
-            </p>
-          </div>
-        </StickyNote>
+        <div className="rounded-2xl p-6 text-center max-w-xs" style={{ background: '#12121F', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+          <span className="text-3xl block mb-2">🗺️</span>
+          <p className="text-lg font-bold" style={{ color: '#818CF8' }}>Trip not found</p>
+          <p className="text-xs font-medium mt-1" style={{ color: '#A78BFA' }}>
+            This journey doesn't exist yet...
+          </p>
+        </div>
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.95 }}
@@ -634,7 +631,7 @@ function MemoryRevealModal({
           }}
         />
 
-        <PolaroidCard rotate={0.5} className="w-full">
+        <div className="w-full rounded-2xl overflow-hidden" style={{ background: '#1A1A2E', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
           {/* Close button */}
           <div className="flex justify-end px-1 pt-1 pb-0">
             <motion.button
@@ -753,16 +750,16 @@ function MemoryRevealModal({
               )}
             </motion.button>
           </div>
-        </PolaroidCard>
+        </div>
 
         {/* Copied notification */}
         {copied && (
-          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-30">
-            <StickyNote rotate={0.5} delay={0}>
-              <p className="font-handwritten text-xs gradient-text whitespace-nowrap">
+          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 z-30">
+            <div className="rounded-lg px-3 py-1.5" style={{ background: '#1A1A2E', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+              <p className="text-xs font-medium" style={{ color: '#818CF8' }}>
                 📋 Copied to clipboard!
               </p>
-            </StickyNote>
+            </div>
           </div>
         )}
       </motion.div>
