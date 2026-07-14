@@ -22,12 +22,12 @@ const topoBg: React.CSSProperties = {
 
 /* ===== MOCK USERS ON MAP ===== */
 const mockUsers = [
-  { name: 'Rahul', city: 'Paris', coords: [2.3522, 48.8566] as [number, number], avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=85&fm=webp', exploring: 'Louvre Museum' },
-  { name: 'Priya', city: 'Tokyo', coords: [139.6917, 35.6895] as [number, number], avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=85&fm=webp', exploring: 'Shibuya Crossing' },
-  { name: 'Arjun', city: 'Bali', coords: [115.0920, -8.4095] as [number, number], avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=85&fm=webp', exploring: 'Ubud Rice Terraces' },
-  { name: 'Ananya', city: 'New York', coords: [-74.0060, 40.7128] as [number, number], avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=85&fm=webp', exploring: 'Central Park' },
-  { name: 'Zara', city: 'Barcelona', coords: [2.1734, 41.3851] as [number, number], avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=85&fm=webp', exploring: 'Sagrada Familia' },
-  { name: 'Vikram', city: 'Sydney', coords: [151.2093, -33.8688] as [number, number], avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=85&fm=webp', exploring: 'Bondi Beach' },
+  { name: 'Rahul', city: 'Paris', coords: [2.3522, 48.8566] as [number, number], avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=60&fm=webp', exploring: 'Louvre Museum' },
+  { name: 'Priya', city: 'Tokyo', coords: [139.6917, 35.6895] as [number, number], avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=60&fm=webp', exploring: 'Shibuya Crossing' },
+  { name: 'Arjun', city: 'Bali', coords: [115.0920, -8.4095] as [number, number], avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=60&fm=webp', exploring: 'Ubud Rice Terraces' },
+  { name: 'Ananya', city: 'New York', coords: [-74.0060, 40.7128] as [number, number], avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=60&fm=webp', exploring: 'Central Park' },
+  { name: 'Zara', city: 'Barcelona', coords: [2.1734, 41.3851] as [number, number], avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=60&fm=webp', exploring: 'Sagrada Familia' },
+  { name: 'Vikram', city: 'Sydney', coords: [151.2093, -33.8688] as [number, number], avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=60&fm=webp', exploring: 'Bondi Beach' },
 ]
 
 /* ===== MAP ACTIVITIES FROM USERS ===== */

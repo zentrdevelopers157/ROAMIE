@@ -266,7 +266,7 @@ export default function Itinerary() {
   })()
 
   // Destination header image
-  const heroImage = `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp`
+  const heroImage = `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=60&fm=webp`
 
   return (
     <div className="relative h-dvh flex flex-col" style={topoBg}>
@@ -556,9 +556,9 @@ function MemoryRevealModal({
     const result = await createPost({
       user_id: user.id,
       user_name: userName || 'Traveler',
-      user_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=85&fm=webp',
+      user_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=60&fm=webp',
       location: trip.destination,
-      image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp',
+      image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=60&fm=webp',
       caption: `Just completed my ${trip.destination} trip! ${dayCount} days, ${activitiesCount} activities, ₹${totalCost.toLocaleString('en-IN')} well spent. Planned by ROAMIE ✨`,
       tags: `#${trip.destination.replace(/\s+/g, '')} #roamie #travel`,
     })

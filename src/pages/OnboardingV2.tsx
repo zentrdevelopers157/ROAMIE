@@ -160,7 +160,7 @@ function CinematicIntro({ onDone }: { onDone: () => void }) {
       <div
         className="absolute w-72 h-72 rounded-full"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=600&q=85&fm=webp)',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=600&q=60&fm=webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           animation: 'spinEarth 20s linear infinite',

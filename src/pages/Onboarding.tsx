@@ -42,12 +42,12 @@ function SketchedBackpack({ size = 60 }: { size?: number }) {
 
 /* ===== VIBE CARD (for Step 2) ===== */
 const vibeData = [
-  { label: 'Beach Bum', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=85&fm=webp', tape: 'cyan' as const },
-  { label: 'Mountain Soul', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=85&fm=webp', tape: 'purple' as const },
-  { label: 'City Explorer', image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&q=85&fm=webp', tape: 'cyan' as const },
-  { label: 'Road Tripper', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=600&q=85&fm=webp', tape: 'purple' as const },
-  { label: 'Foodie', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=85&fm=webp', tape: 'cyan' as const },
-  { label: 'Culture Seeker', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&q=85&fm=webp', tape: 'purple' as const },
+  { label: 'Beach Bum', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=60&fm=webp', tape: 'cyan' as const },
+  { label: 'Mountain Soul', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=60&fm=webp', tape: 'purple' as const },
+  { label: 'City Explorer', image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&q=60&fm=webp', tape: 'cyan' as const },
+  { label: 'Road Tripper', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=600&q=60&fm=webp', tape: 'purple' as const },
+  { label: 'Foodie', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=60&fm=webp', tape: 'cyan' as const },
+  { label: 'Culture Seeker', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&q=60&fm=webp', tape: 'purple' as const },
 ]
 
 function VibeCard({

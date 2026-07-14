@@ -19,9 +19,9 @@ const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
 const mockPosts = [
   {
     id: '1',
-    user: { name: 'Priya Sharma', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=85&fm=webp' },
+    user: { name: 'Priya Sharma', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=60&fm=webp' },
     location: 'Goa, India',
-    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=900&q=85&fm=webp',
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=900&q=60&fm=webp',
     caption: 'Found paradise in the sands of Goa. The waves have a way of washing away every worry. 🌊✨',
     likes: 234,
     comments: 18,
@@ -30,9 +30,9 @@ const mockPosts = [
   },
   {
     id: '2',
-    user: { name: 'Arjun Mehta', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=85&fm=webp' },
+    user: { name: 'Arjun Mehta', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=60&fm=webp' },
     location: 'Manali, India',
-    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=900&q=85&fm=webp',
+    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=900&q=60&fm=webp',
     caption: 'Snow-capped peaks and endless pine forests. Manali feels like a painting come to life. 🏔️❄️',
     likes: 189,
     comments: 12,
@@ -41,9 +41,9 @@ const mockPosts = [
   },
   {
     id: '3',
-    user: { name: 'Ananya Patel', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=85&fm=webp' },
+    user: { name: 'Ananya Patel', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=60&fm=webp' },
     location: 'Kerala, India',
-    image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=900&q=85&fm=webp',
+    image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=900&q=60&fm=webp',
     caption: 'God\'s Own Country indeed. Backwaters, coconut trees, and the most peaceful sunrise I\'ve ever witnessed. 🥥🌅',
     likes: 312,
     comments: 24,
@@ -52,9 +52,9 @@ const mockPosts = [
   },
   {
     id: '4',
-    user: { name: 'Rohan Kapoor', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=85&fm=webp' },
+    user: { name: 'Rohan Kapoor', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=60&fm=webp' },
     location: 'Rishikesh, India',
-    image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=900&q=85&fm=webp',
+    image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=900&q=60&fm=webp',
     caption: 'Found my zen by the Ganges. Rishikesh isn\'t just a place — it\'s a feeling. 🧘🕉️',
     likes: 156,
     comments: 9,
@@ -63,9 +63,9 @@ const mockPosts = [
   },
   {
     id: '5',
-    user: { name: 'Zara Sheikh', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=85&fm=webp' },
+    user: { name: 'Zara Sheikh', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=60&fm=webp' },
     location: 'Udaipur, India',
-    image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=900&q=85&fm=webp',
+    image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=900&q=60&fm=webp',
     caption: 'The City of Lakes stole my heart. Every corner here is a postcard waiting to be captured. 📸💙',
     likes: 278,
     comments: 21,
@@ -197,11 +197,11 @@ function FeedPost({ post, index }: { post: FeedPostData; index: number }) {
 
 /* ===== STORIES ROW ===== */
 const stories = [
-  { name: 'Priya', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=85&fm=webp' },
-  { name: 'Arjun', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=85&fm=webp' },
-  { name: 'Ananya', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=85&fm=webp' },
-  { name: 'Rohan', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=85&fm=webp' },
-  { name: 'Zara', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=85&fm=webp' },
+  { name: 'Priya', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=60&fm=webp' },
+  { name: 'Arjun', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=60&fm=webp' },
+  { name: 'Ananya', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=60&fm=webp' },
+  { name: 'Rohan', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=60&fm=webp' },
+  { name: 'Zara', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=60&fm=webp' },
 ]
 
 /* ===== POST TYPE (unified for mock + Supabase) ===== */

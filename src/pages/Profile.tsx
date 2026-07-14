@@ -176,7 +176,7 @@ export default function Profile() {
               <div
                 className="h-20 w-20 rounded-full bg-cover bg-center ring-2 ring-brand-cyan/20"
                 style={{
-                  backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=85&fm=webp)',
+                  backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=60&fm=webp)',
                 }}
                 role="img"
                 aria-label="Profile photo"

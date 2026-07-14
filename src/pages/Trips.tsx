@@ -99,7 +99,7 @@ function TripCard({ trip, index, onDelete, viewMode, setViewMode }: {
           <div
             className="h-36 w-full bg-cover bg-center"
             style={{
-              backgroundImage: `url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp)`,
+              backgroundImage: `url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=60&fm=webp)`,
             }}
             role="img"
             aria-label={`Photo of ${trip.destination}`}

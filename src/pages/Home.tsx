@@ -130,12 +130,12 @@ function DestinationCard({
 
 /* ===== TRENDING DESTINATIONS DATA ===== */
 const trendingDestinations = [
-  { name: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=85&fm=webp' },
-  { name: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=85&fm=webp' },
-  { name: 'Kerala', image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800&q=85&fm=webp' },
-  { name: 'Rishikesh', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=800&q=85&fm=webp' },
-  { name: 'Udaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&q=85&fm=webp' },
-  { name: 'Leh', image: 'https://images.unsplash.com/photo-1628157588550-b9e051c6af3e?w=800&q=85&fm=webp' },
+  { name: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=60&fm=webp' },
+  { name: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=60&fm=webp' },
+  { name: 'Kerala', image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800&q=60&fm=webp' },
+  { name: 'Rishikesh', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=800&q=60&fm=webp' },
+  { name: 'Udaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&q=60&fm=webp' },
+  { name: 'Leh', image: 'https://images.unsplash.com/photo-1628157588550-b9e051c6af3e?w=800&q=60&fm=webp' },
 ]
 
 /* ===== CHAOTIC TRENDING VARIANTS ===== */
@@ -150,10 +150,10 @@ const trendingVariants = [
 
 /* ===== COMMUNITY SPOTLIGHT DATA ===== */
 const communityPosts = [
-  { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=85&fm=webp', height: 200, rotate: -1, caption: 'Island vibes in Thailand 🏝️', likes: 42 },
-  { image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=900&q=85&fm=webp', height: 140, rotate: 1, caption: 'Mountain sunrise 🌄', likes: 28 },
-  { image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=85&fm=webp', height: 180, rotate: -0.5, caption: 'Lost in Paris streets 🗼', likes: 35 },
-  { image: 'https://images.unsplash.com/photo-1530789253388-582c4b48b1f0?w=900&q=85&fm=webp', height: 160, rotate: 0.8, caption: 'Bali rice terraces 🌾', likes: 51 },
+  { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=60&fm=webp', height: 200, rotate: -1, caption: 'Island vibes in Thailand 🏝️', likes: 42 },
+  { image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=900&q=60&fm=webp', height: 140, rotate: 1, caption: 'Mountain sunrise 🌄', likes: 28 },
+  { image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=60&fm=webp', height: 180, rotate: -0.5, caption: 'Lost in Paris streets 🗼', likes: 35 },
+  { image: 'https://images.unsplash.com/photo-1530789253388-582c4b48b1f0?w=900&q=60&fm=webp', height: 160, rotate: 0.8, caption: 'Bali rice terraces 🌾', likes: 51 },
 ]
 
 /* ===== MAIN HOME COMPONENT ===== */
@@ -235,7 +235,7 @@ export default function Home() {
               <div
                 className="h-10 w-10 rounded-sm bg-cover bg-center"
                 style={{
-                  backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=85&fm=webp)',
+                  backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=60&fm=webp)',
                 }}
                 role="img"
                 aria-label="Your profile photo"
@@ -259,7 +259,7 @@ export default function Home() {
             <div
               className="h-52 w-full bg-cover bg-center"
               style={{
-                backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=90&fm=webp)',
+                backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=60&fm=webp)',
               }}
               role="img"
               aria-label="Beautiful travel destination"
