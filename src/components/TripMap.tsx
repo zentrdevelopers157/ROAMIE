@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 
 /* ===== MARKER STYLES ===== */
+let mapboxCssLoaded = false
+
 const markerStyleId = 'roamie-marker-style'
 
 function injectMarkerStyles() {
@@ -83,6 +84,14 @@ export default function TripMap({ activities }: { activities: MapActivity[] }) {
   const initialized = useRef(false)
 
   useEffect(() => {
+    // Dynamically load Mapbox CSS only when this component renders
+    if (!mapboxCssLoaded) {
+      mapboxCssLoaded = true
+      import('mapbox-gl/dist/mapbox-gl.css').catch(() => {
+        console.warn('Failed to load Mapbox CSS')
+      })
+    }
+
     injectMarkerStyles()
 
     if (!mapContainer.current || initialized.current) return
