@@ -73,7 +73,9 @@ function TripCard({ trip, index, onDelete, viewMode, setViewMode }: {
               <div className="flex items-center gap-1.5">
                 <Calendar size={9} strokeWidth={2} className="text-text-secondary/60" />
                 <span className="text-[9px] text-text-secondary/70">
-                  {new Date(trip.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {trip.startDate
+                    ? `${new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${trip.endDate ? ` - ${new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}`
+                    : new Date(trip.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
               </div>
             </div>

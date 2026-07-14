@@ -11,17 +11,47 @@ function injectMarkerStyles() {
   style.id = markerStyleId
   style.textContent = `
     .roamie-marker {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       background: #00D4C4;
-      border: 2.5px solid rgba(0, 212, 196, 0.35);
-      box-shadow: 0 0 12px rgba(0, 212, 196, 0.5);
+      border: 3px solid rgba(0, 212, 196, 0.4);
+      box-shadow: 0 0 15px rgba(0, 212, 196, 0.6);
       cursor: pointer;
       transition: transform 0.2s ease;
+      position: relative;
+    }
+    .roamie-marker::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(0, 212, 196, 0.2);
+      transform: translate(-50%, -50%) scale(1);
+      animation: roamiePulse 2s ease-in-out infinite;
+      pointer-events: none;
     }
     .roamie-marker:hover {
-      transform: scale(1.3);
+      transform: scale(1.4);
+    }
+    @keyframes roamiePulse {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    }
+    .roamie-marker-inner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ffffff;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
     }
     .mapboxgl-popup-content {
       background: #14141F !important;
@@ -87,15 +117,20 @@ export default function TripMap({ activities }: { activities: MapActivity[] }) {
     map.on('load', () => {
       if (!map) return
 
-      // Add markers
+      // Add markers with pulsing cyan dots
       activities.forEach((activity) => {
         const el = document.createElement('div')
         el.className = 'roamie-marker'
 
+        // Inner white dot
+        const inner = document.createElement('div')
+        inner.className = 'roamie-marker-inner'
+        el.appendChild(inner)
+
         new mapboxgl.Marker({ element: el })
           .setLngLat(activity.coordinates)
           .setPopup(
-            new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(activity.name),
+            new mapboxgl.Popup({ offset: 22, closeButton: false }).setText(activity.name),
           )
           .addTo(map)
       })

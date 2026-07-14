@@ -18,10 +18,17 @@ import {
   Star,
   Users,
   Bell,
+  BellOff,
+  Dices,
+  Book,
 } from 'lucide-react'
 import PolaroidCard from '../components/PolaroidCard'
 import PushPin from '../components/PushPin'
 import { useRoamie } from '../store/RoamieContext'
+import {
+  getBrowserNotificationStatus,
+  requestBrowserNotificationPermission,
+} from '../lib/reminders'
 
 /* ===== SPRING ===== */
 const springGentle = { type: 'spring' as const, stiffness: 200, damping: 22 }
@@ -68,6 +75,58 @@ function SettingRow({ icon: Icon, label, description, onClick, isLast = false }:
       <div className="flex-1 text-left">
         <p className="text-sm font-display font-medium text-text-primary">{label}</p>
         {description && <p className="text-[10px] text-text-secondary mt-0.5">{description}</p>}
+      </div>
+      <ChevronRight size={14} strokeWidth={2} className="text-text-secondary/40" />
+    </motion.button>
+  )
+}
+
+/* ===== NOTIFICATION SETTING ROW ===== */
+function NotificationSetting() {
+  const status = getBrowserNotificationStatus()
+  const [notifStatus, setNotifStatus] = useState<'granted' | 'denied' | 'default' | 'unsupported'>(status)
+
+  const handleToggle = async () => {
+    if (notifStatus === 'granted') {
+      // Can't revoke programmatically, guide user to browser settings
+      return
+    }
+    const result = await requestBrowserNotificationPermission()
+    setNotifStatus(result)
+  }
+
+  const statusLabel = {
+    granted: 'Enabled',
+    denied: 'Blocked',
+    default: 'Tap to enable',
+    unsupported: 'Unsupported',
+  }[notifStatus]
+
+  const statusColor = {
+    granted: '#00D4C4',
+    denied: '#FF6B6B',
+    default: '#8888A0',
+    unsupported: '#555570',
+  }[notifStatus]
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.98 }}
+      onClick={handleToggle}
+      className="flex items-center gap-3 w-full px-1 py-3.5 border-b border-[#2A2A3E]/30"
+    >
+      <div className="h-8 w-8 rounded-lg bg-card-bg flex items-center justify-center border border-[#2A2A3E]/40">
+        {notifStatus === 'denied' ? (
+          <BellOff size={15} strokeWidth={1.5} className="text-text-secondary" />
+        ) : (
+          <Bell size={15} strokeWidth={1.5} className="text-text-secondary" />
+        )}
+      </div>
+      <div className="flex-1 text-left">
+        <p className="text-sm font-display font-medium text-text-primary">Notifications</p>
+        <p className="text-[10px] font-body mt-0.5" style={{ color: statusColor }}>
+          Browser alerts — {statusLabel}
+        </p>
       </div>
       <ChevronRight size={14} strokeWidth={2} className="text-text-secondary/40" />
     </motion.button>
@@ -200,7 +259,9 @@ export default function Profile() {
           </h3>
           <div className="bg-card-bg rounded-lg px-4 border border-[#2A2A3E]/40 shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
             <SettingRow icon={User} label="Edit Profile" description="Name, avatar, travel vibe" />
-            <SettingRow icon={Bell} label="Notifications" description="Trip alerts, community updates" />
+            <NotificationSetting />
+            <SettingRow icon={Dices} label="🎰 Spin & Win" description="Win trips with RoamCoins" onClick={() => navigate('/spin')} />
+            <SettingRow icon={Book} label="🌍 Global Passport" description="Collect every country" onClick={() => navigate('/passport')} />
             <SettingRow icon={Globe} label="Language" description="English (US)" />
             <SettingRow icon={Star} label="✨ Roamie Pro" description="Unlock premium features" onClick={() => navigate('/pro')} />
             <SettingRow icon={Star} label="Rate ROAMIE" description="Share your feedback" />

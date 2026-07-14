@@ -7,6 +7,8 @@ import {
   Plus,
   Hash,
   User,
+  Globe,
+  Book,
   type LucideIcon,
 } from 'lucide-react'
 import { useRoamie } from '../store/RoamieContext'
@@ -21,8 +23,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/home', icon: Home, label: 'Home' },
   { path: '/trips', icon: Map, label: 'Trips' },
+  { path: '/radar', icon: Globe, label: 'Radar' },
   { path: '/plan', icon: Plus, label: 'Plan', isCenter: true },
   { path: '/feed', icon: Hash, label: 'Feed' },
+  { path: '/passport', icon: Book, label: 'Passport' },
   { path: '/profile', icon: User, label: 'Profile' },
 ]
 
@@ -51,8 +55,8 @@ export default function BottomNav() {
         </span>
       </div>
 
-      {/* Navigation items */}
-      <div className="relative flex items-center justify-around px-2 pb-[calc(env(safe-area-inset-bottom,8px)+4px)] pt-1">
+      {/* Navigation items — scrollable on small screens */}
+      <div className="relative flex items-center gap-0.5 overflow-x-auto scrollbar-none px-2 pb-[calc(env(safe-area-inset-bottom,8px)+4px)] pt-1" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           const isHovered = hoveredPath === item.path
@@ -65,8 +69,9 @@ export default function BottomNav() {
                 onClick={() => handleNavigate(item.path)}
                 onMouseEnter={() => setHoveredPath(item.path)}
                 onMouseLeave={() => setHoveredPath(null)}
-                className="relative -mt-6 flex h-14 w-14 items-center justify-center rounded-full"
+                className="relative -mt-6 flex h-14 w-14 items-center justify-center rounded-full flex-shrink-0 sticky z-10"
                 style={{
+                  left: 'calc(50% - 28px)',
                   background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
                   boxShadow: isActive || isHovered
                     ? '0 0 25px rgba(0, 212, 196, 0.4), 0 0 50px rgba(42, 107, 255, 0.2), 0 0 70px rgba(138, 43, 226, 0.15)'
@@ -87,7 +92,8 @@ export default function BottomNav() {
               onClick={() => handleNavigate(item.path)}
               onMouseEnter={() => setHoveredPath(item.path)}
               onMouseLeave={() => setHoveredPath(null)}
-              className="relative flex flex-col items-center gap-1 px-3 py-1"
+              className="relative flex flex-col items-center gap-1 px-3 py-1 flex-shrink-0"
+              style={{ scrollSnapAlign: 'center' }}
               whileTap={{ scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             >
@@ -110,7 +116,7 @@ export default function BottomNav() {
                 )}
               </div>
               <span
-                className={`text-[10px] font-medium tracking-wide ${
+                className={`text-[10px] font-medium tracking-wide whitespace-nowrap ${
                   isActive ? 'text-brand-cyan' : 'text-text-secondary'
                 }`}
               >

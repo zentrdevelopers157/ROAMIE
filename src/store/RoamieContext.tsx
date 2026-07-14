@@ -28,45 +28,78 @@ export interface SavedTrip {
   itinerary: ItineraryItem[]
   rawDays?: RawDay[]
   createdAt: string
+  startDate?: string
+  endDate?: string
+}
+
+export interface BookedOption {
+  type: string
+  name: string
+  price: number
+  reason: string
+}
+
+export interface ConfirmedBooking {
+  destination: string
+  selectedOptions: BookedOption[]
+  totalPaid: number
+  paidAt: string
 }
 
 export interface RoamieState {
   name: string
+  nickname: string
   selectedVibes: number[]
   adventureLevel: number
   socialLevel: number
   trips: SavedTrip[]
   onboarded: boolean
   roamCoins: number
+  isPro: boolean
+  proExpiresAt: string | null
+  confirmedBookings: ConfirmedBooking[]
+  selectedDestKinds: string[]
 }
 
 type Action =
   | { type: 'SET_NAME'; payload: string }
+  | { type: 'SET_NICKNAME'; payload: string }
   | { type: 'SET_VIBES'; payload: number[] }
   | { type: 'SET_ADVENTURE_LEVEL'; payload: number }
   | { type: 'SET_SOCIAL_LEVEL'; payload: number }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'ADD_TRIP'; payload: SavedTrip }
   | { type: 'REMOVE_TRIP'; payload: string }
+  | { type: 'UPDATE_TRIP_DATES'; payload: { id: string; startDate: string; endDate: string } }
   | { type: 'LOAD_STATE'; payload: RoamieState }
   | { type: 'ADD_COINS'; payload: number }
+  | { type: 'SET_PRO'; payload: { isPro: boolean; expiresAt: string | null } }
+  | { type: 'ADD_BOOKING'; payload: ConfirmedBooking }
+  | { type: 'SET_DEST_KINDS'; payload: string[] }
 
 /* ===== INITIAL STATE ===== */
-const initialState: RoamieState = {
+export const initialState: RoamieState = {
   name: '',
+  nickname: '',
   selectedVibes: [],
   adventureLevel: 5,
   socialLevel: 6,
   trips: [],
   onboarded: false,
   roamCoins: 100,
+  isPro: false,
+  proExpiresAt: null,
+  confirmedBookings: [],
+  selectedDestKinds: [],
 }
 
 /* ===== REDUCER ===== */
-function roamieReducer(state: RoamieState, action: Action): RoamieState {
+export function roamieReducer(state: RoamieState, action: Action): RoamieState {
   switch (action.type) {
     case 'SET_NAME':
       return { ...state, name: action.payload }
+    case 'SET_NICKNAME':
+      return { ...state, nickname: action.payload }
     case 'SET_VIBES':
       return { ...state, selectedVibes: action.payload }
     case 'SET_ADVENTURE_LEVEL':
@@ -79,8 +112,23 @@ function roamieReducer(state: RoamieState, action: Action): RoamieState {
       return { ...state, trips: [action.payload, ...state.trips] }
     case 'REMOVE_TRIP':
       return { ...state, trips: state.trips.filter(t => t.id !== action.payload) }
+    case 'UPDATE_TRIP_DATES':
+      return {
+        ...state,
+        trips: state.trips.map((t) =>
+          t.id === action.payload.id
+            ? { ...t, startDate: action.payload.startDate, endDate: action.payload.endDate }
+            : t,
+        ),
+      }
     case 'ADD_COINS':
       return { ...state, roamCoins: (state.roamCoins ?? 100) + action.payload }
+    case 'SET_PRO':
+      return { ...state, isPro: action.payload.isPro, proExpiresAt: action.payload.expiresAt }
+    case 'ADD_BOOKING':
+      return { ...state, confirmedBookings: [action.payload, ...state.confirmedBookings] }
+    case 'SET_DEST_KINDS':
+      return { ...state, selectedDestKinds: action.payload }
     case 'LOAD_STATE':
       return { ...action.payload }
     default:

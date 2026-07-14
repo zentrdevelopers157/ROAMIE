@@ -9,7 +9,7 @@ import { useAuth } from '../store/AuthContext'
 import TripMap from '../components/TripMap'
 import type { MapActivity } from '../components/TripMap'
 import PolaroidCard from '../components/PolaroidCard'
-import WashiTape from '../components/WashiTape'
+import StickyNote from '../components/StickyNote'
 
 /* ===== SPRINGS ===== */
 /* ===== TOPOGRAPHIC BG (matches Plan page) ===== */
@@ -348,7 +348,7 @@ export default function Itinerary() {
                 setShowMemoryModal(true)
                 if (!tripCompleted) {
                   setTripCompleted(true)
-                  dispatch({ type: 'ADD_COINS', payload: 500 })
+                  dispatch({ type: 'ADD_COINS', payload: 1000 })
                 }
               }}
               className="text-[9px] font-display font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-full transition-all duration-200 flex items-center gap-1"
@@ -519,7 +519,7 @@ export default function Itinerary() {
   )
 }
 
-/* ===== MEMORY REVEAL MODAL ===== */
+/* ===== MEMORY REVEAL MODAL (Sticker Pack Version) ===== */
 function MemoryRevealModal({
   trip,
   onClose,
@@ -532,6 +532,7 @@ function MemoryRevealModal({
   userName: string
 }) {
   const [sharedToFeed, setSharedToFeed] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Compute stats
   const dayCount = trip.rawDays?.length ?? 1
@@ -568,6 +569,29 @@ function MemoryRevealModal({
     }
   }
 
+  const handleShareToInstagram = async () => {
+    const shareData = {
+      title: `My ${trip.destination} Trip`,
+      text: `Just completed my ${trip.destination} trip! ${dayCount} days, ${activitiesCount} activities, planned by ROAMIE ✨`,
+    }
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData)
+      } catch {
+        // User cancelled
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareData.text)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 3000)
+      } catch {
+        // Clipboard not available
+      }
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -583,11 +607,22 @@ function MemoryRevealModal({
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-sm relative"
       >
-        {/* Corner WashiTape decorations */}
-        <WashiTape color="purple" rotate={-3} className="-top-3 -left-2" size="sm" />
-        <WashiTape color="cyan" rotate={3} className="-top-3 -right-2" size="sm" />
-        <WashiTape color="cyan" rotate={-2} className="-bottom-3 -left-2" size="sm" />
-        <WashiTape color="purple" rotate={2} className="-bottom-3 -right-2" size="sm" />
+        {/* Sticker Pack: scattered emojis */}
+        <span className="absolute -top-2 -left-2 text-lg z-20">🌟</span>
+        <span className="absolute top-1 right-0 text-lg z-20">✈️</span>
+        <span className="absolute bottom-8 -left-3 text-lg z-20">🌍</span>
+        <span className="absolute -bottom-2 right-2 text-lg z-20">🏆</span>
+        <span className="absolute -top-1 right-8 text-lg z-20">✨</span>
+        <span className="absolute bottom-12 -right-2 text-lg z-20">🗺️</span>
+
+        {/* Glow border around Polaroid */}
+        <div
+          className="absolute inset-[-4px] rounded-sm pointer-events-none z-10"
+          style={{
+            border: '2px solid rgba(0, 212, 196, 0.3)',
+            boxShadow: '0 0 30px rgba(0, 212, 196, 0.25), 0 0 60px rgba(42, 107, 255, 0.1), 0 0 90px rgba(138, 43, 226, 0.05)',
+          }}
+        />
 
         <PolaroidCard rotate={0.5} className="w-full">
           {/* Close button */}
@@ -604,7 +639,7 @@ function MemoryRevealModal({
             </motion.button>
           </div>
 
-          {/* Trip Scorecard */}
+          {/* Sticker Pack: Scorecard */}
           <div className="px-3 pb-4 pt-1 text-center">
             {/* Destination */}
             <h2 className="font-handwritten text-xl gradient-text font-medium">
@@ -647,6 +682,30 @@ function MemoryRevealModal({
 
           {/* Actions */}
           <div className="px-3 pb-3 space-y-2">
+            {/* Share to Instagram (Web Share API) */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleShareToInstagram}
+              className="w-full py-2.5 rounded-full text-xs font-display font-semibold tracking-wider flex items-center justify-center gap-2 transition-all duration-200"
+              style={{
+                background: copied
+                  ? 'rgba(34, 197, 94, 0.15)'
+                  : 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
+                backgroundSize: '200% 200%',
+                boxShadow: copied
+                  ? 'none'
+                  : '0 0 20px rgba(0, 212, 196, 0.2), 0 4px 12px rgba(0,0,0,0.3)',
+                color: copied ? '#22C55E' : 'white',
+              }}
+            >
+              {copied ? (
+                <><CheckCircle size={14} strokeWidth={2.5} /> Copied to clipboard!</>
+              ) : (
+                <><Share2 size={14} strokeWidth={2.5} /> Share to Instagram</>
+              )}
+            </motion.button>
+
             {/* Share to WhatsApp */}
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -654,9 +713,9 @@ function MemoryRevealModal({
               onClick={handleShareWhatsApp}
               className="w-full py-2.5 rounded-full text-xs font-display font-semibold text-white tracking-wider flex items-center justify-center gap-2"
               style={{
-                background: 'linear-gradient(135deg, #00D4C4, #2A6BFF, #8A2BE2)',
-                backgroundSize: '200% 200%',
-                boxShadow: '0 0 20px rgba(0, 212, 196, 0.2), 0 4px 12px rgba(0,0,0,0.3)',
+                background: 'rgba(0, 212, 196, 0.08)',
+                border: '1px solid rgba(0, 212, 196, 0.2)',
+                color: '#00D4C4',
               }}
             >
               <Share2 size={14} strokeWidth={2.5} />
@@ -685,6 +744,17 @@ function MemoryRevealModal({
             </motion.button>
           </div>
         </PolaroidCard>
+
+        {/* Copied notification */}
+        {copied && (
+          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-30">
+            <StickyNote rotate={0.5} delay={0}>
+              <p className="font-handwritten text-xs gradient-text whitespace-nowrap">
+                📋 Copied to clipboard!
+              </p>
+            </StickyNote>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   )
