@@ -25,3 +25,7 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Local build artifacts (not needed in repo)
+lighthouse-report.json
+src/screenshots/
