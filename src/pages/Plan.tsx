@@ -377,6 +377,7 @@ export default function Plan() {
   const [tripDate, setTripDate] = useState('')
   const [inputText, setInputText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
 
   const [aiResult, setAiResult] = useState<AITripResponse | null>(null)
   const [aiError, setAiError] = useState(false)
@@ -748,12 +749,20 @@ export default function Plan() {
               boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
             }}
           >
-            <div className="flex-1 relative">
-              <input
+            <motion.div
+              className="flex-1 relative"
+              animate={{
+                boxShadow: isFocused ? '0 0 20px rgba(99, 102, 241, 0.2)' : 'none',
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.input
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 placeholder={
                   interviewStep === 0 ? 'Type a destination...' :
                   interviewStep === 1 ? 'Your budget...' :
@@ -762,6 +771,10 @@ export default function Plan() {
                 className="w-full bg-transparent text-sm text-text-primary placeholder-text-secondary/50 font-body outline-none"
                 style={{ fontFamily: "'Inter', sans-serif" }}
                 disabled={isProcessing || isTyping}
+                animate={{
+                  height: isFocused ? 30 : 20,
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               />
               <div
                 className="absolute bottom-0 left-0 right-0 h-[1px] transition-opacity duration-300"
@@ -772,7 +785,7 @@ export default function Plan() {
                   opacity: inputText.trim() ? 0.8 : 0.3,
                 }}
               />
-            </div>
+          </motion.div>
 
             <motion.button
               whileHover={{ scale: 1.08 }}

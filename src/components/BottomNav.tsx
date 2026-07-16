@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, Map, Plus, Users, User } from 'lucide-react'
+import { Home, Map, Plus, Users, User, Coins } from 'lucide-react'
+import { useRoamie } from '../store/RoamieContext'
 
 interface NavItem {
   path: string
@@ -18,10 +19,28 @@ const navItems: NavItem[] = [
   { path: '/profile', icon: User, label: 'Profile' },
 ]
 
+/* ===== JELLY TAP (reusable) ===== */
+const jellyTap = {
+  scale: 0.92,
+  transition: { type: 'spring' as const, stiffness: 400, damping: 15 },
+}
+
+/* ===== SPRING ===== */
+const springPop = { type: 'spring' as const, stiffness: 400, damping: 12 }
+
 export default function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const [hoveredPath, setHoveredPath] = useState<string | null>(null)
+  const { state } = useRoamie()
+  const [coinBounce, setCoinBounce] = useState(false)
+
+  // Trigger coin bounce on mount
+  useEffect(() => {
+    setCoinBounce(true)
+    const timer = setTimeout(() => setCoinBounce(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleNavigate = (path: string) => {
     navigate(path)
@@ -54,7 +73,7 @@ export default function BottomNav() {
                     : '0 4px 15px rgba(0, 0, 0, 0.4)',
                 }}
                 whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
+                whileTap={jellyTap}
                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
               >
                 <Icon size={24} className="text-white" strokeWidth={2.5} />
@@ -69,18 +88,24 @@ export default function BottomNav() {
               onMouseEnter={() => setHoveredPath(item.path)}
               onMouseLeave={() => setHoveredPath(null)}
               className="relative flex flex-col items-center gap-1 px-5 py-1 flex-shrink-0"
-              whileTap={{ scale: 0.9 }}
+              whileTap={jellyTap}
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             >
               <div className="relative">
-                <Icon
-                  size={22}
-                  strokeWidth={isActive ? 2.5 : 1.8}
-                  className={isActive ? 'text-brand-cyan' : 'text-text-secondary'}
-                  style={{
-                    filter: isActive ? 'drop-shadow(0 0 6px rgba(0, 212, 196, 0.4))' : 'none',
-                  }}
-                />
+                {/* Active icon with pop effect */}
+                <motion.div
+                  animate={isActive ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                  transition={isActive ? { ...springPop, delay: 0.05 } : { duration: 0.2 }}
+                >
+                  <Icon
+                    size={22}
+                    strokeWidth={isActive ? 2.5 : 1.8}
+                    className={isActive ? 'text-brand-cyan' : 'text-text-secondary'}
+                    style={{
+                      filter: isActive ? 'drop-shadow(0 0 6px rgba(0, 212, 196, 0.4))' : 'none',
+                    }}
+                  />
+                </motion.div>
                 {isActive && (
                   <motion.div
                     layoutId="navDot"
@@ -100,6 +125,22 @@ export default function BottomNav() {
             </motion.button>
           )
         })}
+
+        {/* RoamCoin counter */}
+        <motion.div
+          className="absolute -top-2 right-4 flex items-center gap-1 px-2 py-1 rounded-full"
+          style={{
+            background: 'rgba(0, 212, 196, 0.08)',
+            border: '1px solid rgba(0, 212, 196, 0.12)',
+          }}
+          animate={coinBounce ? { scale: [1, 1.3, 0.9, 1.05, 1] } : { scale: 1 }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+        >
+          <Coins size={12} style={{ color: '#FFD700' }} />
+          <span className="text-[9px] font-semibold" style={{ color: '#00D4C4' }}>
+            {(state.roamCoins ?? 100).toLocaleString()}
+          </span>
+        </motion.div>
       </div>
     </nav>
   )

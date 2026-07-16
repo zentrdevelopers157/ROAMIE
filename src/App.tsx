@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import NoiseTexture from './components/NoiseTexture'
+import { motion, AnimatePresence } from 'framer-motion'
 import BottomNav from './components/BottomNav'
 
 /* ===== EAGER IMPORTS (critical path — always loaded) ===== */
@@ -68,41 +68,41 @@ export default function App() {
   }, [])
 
   return (
-    /* ===== DESKTOP FRAME: floating phone on large screens ===== */
-    <div className="min-h-screen bg-[#050508] flex items-center justify-center">
-      <div
-        className="relative w-full max-w-md min-h-screen bg-[#0A0A12] overflow-y-auto overflow-x-hidden"
-        style={{
-          boxShadow: '0 0 80px rgba(42, 107, 255, 0.15), 0 0 160px rgba(0, 212, 196, 0.05)',
-        }}
-      >
-        <NoiseTexture />
+    <div className="min-h-screen bg-[#0A0A12] relative">
+      <main className={`relative z-10 ${hideNav ? 'pb-0' : 'pb-24'}`}>
+        <Suspense fallback={<PageFallback />}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Routes location={location}>
+                <Route path="/" element={<Splash />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/trips" element={<Trips />} />
+                <Route path="/plan" element={<Plan />} />
+                <Route path="/feed" element={<Feed />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/itinerary/:tripId" element={<Itinerary />} />
+                <Route path="/pro" element={<ProPaywall />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/onboard-v2" element={<OnboardingV2 />} />
+                <Route path="/radar" element={<Radar />} />
+                <Route path="/spin" element={<SpinWheel />} />
+                <Route path="/passport" element={<Passport />} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
+        </Suspense>
+      </main>
 
-        <main className={`relative z-10 ${hideNav ? 'pb-0' : 'pb-24'}`}>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/" element={<Splash />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/trips" element={<Trips />} />
-              <Route path="/plan" element={<Plan />} />
-              <Route path="/feed" element={<Feed />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/itinerary/:tripId" element={<Itinerary />} />
-              <Route path="/pro" element={<ProPaywall />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/onboard-v2" element={<OnboardingV2 />} />
-              <Route path="/radar" element={<Radar />} />
-              <Route path="/spin" element={<SpinWheel />} />
-              <Route path="/passport" element={<Passport />} />
-            </Routes>
-          </Suspense>
-        </main>
-
-        {!hideNav && <BottomNav />}
-      </div>
+      {!hideNav && <BottomNav />}
     </div>
   )
 }

@@ -116,6 +116,7 @@ export default function Chat() {
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
@@ -371,18 +372,30 @@ export default function Chat() {
             <Mic size={16} strokeWidth={1.8} />
           </motion.button>
 
-          <div className="flex-1 relative">
-            <input
+          <motion.div
+            className="flex-1 relative"
+            animate={{
+              boxShadow: isFocused ? '0 0 20px rgba(99, 102, 241, 0.2)' : 'none',
+            }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.input
               id="roamie-chat-input"
               ref={inputRef}
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               placeholder="Ask Roamie anything..."
               className="w-full bg-transparent text-sm text-text-primary placeholder-text-secondary/50 font-body outline-none"
               style={{ fontFamily: "'Inter', sans-serif" }}
               disabled={isTyping}
+              animate={{
+                height: isFocused ? 30 : 20,
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             />
             <div
               className="absolute bottom-0 left-0 right-0 h-[1px] transition-opacity duration-300"
@@ -394,7 +407,7 @@ export default function Chat() {
                 boxShadow: inputText.trim() ? '0 0 8px rgba(0, 212, 196, 0.3)' : 'none',
               }}
             />
-          </div>
+          </motion.div>
 
           <motion.button
             whileHover={{ scale: 1.08 }}
